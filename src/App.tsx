@@ -1,25 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import { Route, Routes, BrowserRouter } from 'react-router-dom';
+import { Home } from './Home';
+import { auth, db } from './firebase';
+import { useEffect } from 'react';
+import { Room } from './Room';
+import { useSetRecoilState } from 'recoil';
+import { currentUserState } from './store/authState';
+import firebase from 'firebase';
 
 function App() {
+  const setCurrentUser = useSetRecoilState<firebase.User | null>(
+    currentUserState
+  );
+  useEffect(() => {
+    auth.onAuthStateChanged(async (user) => {
+      // 未ログイン時
+      if (!user) {
+        // 匿名ログインする
+        auth.signInAnonymously();
+      }
+      // ログイン時
+      else {
+        // ログイン済みのユーザー情報があるかをチェック
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (!userDoc.exists) {
+          // Firestore にユーザー用のドキュメントが作られていなければ作る
+          await userDoc.ref.set({
+            uid: user.uid,
+          });
+        }
+      }
+      setCurrentUser(user);
+    });
+  }, [setCurrentUser]);
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='/room/:id' element={<Room />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
