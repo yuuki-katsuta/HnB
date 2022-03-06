@@ -1,9 +1,9 @@
-import './App.css';
+import './css/App.css';
 import { Route, Routes, BrowserRouter } from 'react-router-dom';
-import { Home } from './Home';
+import { Home } from './page/Home';
 import { auth, db } from './firebase';
 import { useEffect } from 'react';
-import { Room } from './Room';
+import { Room } from './page/Room';
 import { useSetRecoilState } from 'recoil';
 import { currentUserState } from './store/authState';
 import firebase from 'firebase';

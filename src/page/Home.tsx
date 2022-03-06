@@ -1,10 +1,10 @@
 import { FC, useState } from 'react';
-import { CheckboxField } from './CheckboxField';
+import { CheckboxField } from '../components/CheckboxField';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
-import { currentUserState } from './store/authState';
+import { currentUserState } from '../store/authState';
 import firebase from 'firebase';
-import { registerRoom } from './logic/registerRoom';
+import { registerRoom } from '../logic/registerRoom';
 
 export const Home: FC = () => {
   const navigate = useNavigate();

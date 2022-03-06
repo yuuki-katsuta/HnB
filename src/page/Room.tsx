@@ -1,9 +1,9 @@
 import { FC, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { db } from './firebase';
-import { registerGameData } from './logic/registerGameData';
-import { LogField } from './LogField';
-import { CheckboxField } from './CheckboxField';
+import { db } from '../firebase';
+import { registerGameData } from '../logic/registerGameData';
+import { LogField } from '../components/LogField';
+import { CheckboxField } from '../components/CheckboxField';
 import { Navigate } from 'react-router-dom';
 
 //url直打ち移動、更新、閉じるで発火
