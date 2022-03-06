@@ -111,17 +111,19 @@ export const Room: FC = () => {
   return !userInfo ? (
     <Navigate to='/' replace />
   ) : (
-    <div>
-      <p>Room: {userInfo.id}</p>
+    <div className='container'>
+      <h4>Room: {userInfo.id}</h4>
       {!userData.player ? (
         <p>対戦相手が見つからないよ...</p>
       ) : (
         <div>
-          <p>対戦相手が見つかったよ!!</p>
-          <p>
-            あなたは、 {userInfo.name} ({userData.player})
-          </p>
-          <p>自分の番号: {userData.selectNumber}</p>
+          <div className='roomInfo-field'>
+            <p>対戦相手が見つかったよ!!</p>
+            <p>
+              あなたは、 {userInfo.name} ({userData.player})
+            </p>
+            <p>自分の番号: {userData.selectNumber}</p>
+          </div>
           <div>
             {!isGemeSet && (
               <>

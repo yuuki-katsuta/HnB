@@ -21,23 +21,25 @@ export const CheckboxField: FC<Props> = ({
 
   return (
     <>
-      {new Array(10).fill(0).map((_, i) => {
-        return (
-          <span key={i}>
-            <input
-              type='checkbox'
-              value={i}
-              checked={checkedValues.includes(i)}
-              onChange={(e) => checkValues(e)}
-            />
-            <label>{i}</label>
-          </span>
-        );
-      })}
+      <div className='select-wrapper'>
+        {new Array(10).fill(0).map((_, i) => {
+          return (
+            <span key={i}>
+              <input
+                type='checkbox'
+                value={i}
+                checked={checkedValues.includes(i)}
+                onChange={(e) => checkValues(e)}
+              />
+              <label>{i}</label>
+            </span>
+          );
+        })}
+      </div>
+      <span className='selected-number'>選んだ数字→{checkedValues}</span>
       <br />
       <button onClick={() => setCheckedValues([])}>数字をリセット</button>
       <br />
-      <span>選んだ数字→{checkedValues}</span>
     </>
   );
 };

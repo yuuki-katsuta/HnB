@@ -35,19 +35,27 @@ export const LogField: FC<Props> = ({ log, player }) => {
       )}
       {log.map((logData, index: number) => (
         <p key={index}>
-          {player === 'player1'
-            ? `
-                    あなた: 選んだ数字: ${logData.player1.ownSelect}, hit:
-                  ${logData.player1.hit}, blow:${logData.player1.blow} -----
-                  あいて :選んだ数字:${logData.player2.ownSelect}, hit:
-                  ${logData.player2.hit}, blow:${logData.player2.blow}
-                  `
-            : `
-                  あなた: 選んだ数字: ${logData.player2.ownSelect}, hit:
-                  ${logData.player2.hit}, blow:${logData.player2.blow} -----
-                  あいて :選んだ数字:${logData.player1.ownSelect}, hit:
-                  ${logData.player1.hit}, blow:${logData.player1.blow}
-                  `}
+          {player === 'player1' ? (
+            <p>
+              あなた: 選んだ数字: {logData.player1.ownSelect}, hit:
+              {logData.player1.hit}, blow:{logData.player1.blow}
+              <br />
+              あいて :選んだ数字:{logData.player2.ownSelect}, hit:
+              {logData.player2.hit}, blow:{logData.player2.blow}
+              <br />
+              ==================
+            </p>
+          ) : (
+            <p>
+              あなた: 選んだ数字: {logData.player2.ownSelect}, hit:
+              {logData.player2.hit}, blow:{logData.player2.blow}
+              <br />
+              あいて :選んだ数字:{logData.player1.ownSelect}, hit:
+              {logData.player1.hit}, blow:{logData.player1.blow}
+              <br />
+              ==================
+            </p>
+          )}
         </p>
       ))}
     </div>
