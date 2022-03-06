@@ -30,6 +30,7 @@ export const Home: FC = () => {
           setName(e.target.value);
         }}
       />
+      <span>(10文字以内にしてね!)</span>
       <br />
       <label>roomID</label>
       <input

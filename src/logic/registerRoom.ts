@@ -1,4 +1,7 @@
 import { db } from '../firebase';
+import { numberValidate } from './numberValidate';
+import { nameValidate } from './nameValidate';
+import { roomIdValidate } from './roomIdValidate';
 
 export const registerRoom = async (
   id: string,
@@ -6,6 +9,19 @@ export const registerRoom = async (
   numberList: number[],
   userUid: string
 ) => {
+  if (!numberValidate(numberList)) {
+    alert(`無効な数字だよ! 数字は3つ選んでね!`);
+    throw new Error();
+  }
+  if (nameValidate(name)) {
+    alert(`無効な名前だよ!`);
+    throw new Error();
+  }
+  if (roomIdValidate(id)) {
+    alert('roomIDを入力してね!');
+    throw new Error();
+  }
+
   const ref = db.collection('rooms').doc(`room: ${id}`).collection('player');
   const member = await ref.get().then((doc) => doc.docs.length);
   if (member >= 2) {
