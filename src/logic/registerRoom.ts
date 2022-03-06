@@ -10,7 +10,7 @@ export const registerRoom = async (
   const member = await ref.get().then((doc) => doc.docs.length);
   if (member >= 2) {
     alert('他のプレイヤーがいるみたい...!');
-    return;
+    throw new Error();
   }
 
   let latestUid: string = '';
@@ -19,9 +19,10 @@ export const registerRoom = async (
       if (doc.exists) latestUid = doc.data().uid;
     });
   });
+
   if (userUid === latestUid) {
     alert('同じユーザーは入れないよ!');
-    return;
+    throw new Error();
   }
 
   const docRef = db.collection('rooms').doc(`room: ${id}`);

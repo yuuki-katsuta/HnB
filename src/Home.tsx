@@ -41,10 +41,13 @@ export const Home: FC = () => {
       <br />
       <button
         onClick={async () => {
-          await registerRoom(roomId, name, checkedValues, currentUser.uid);
-          navigate(`room/${roomId}`, {
-            state: { id: roomId, name: name, uid: currentUser.uid },
-          });
+          registerRoom(roomId, name, checkedValues, currentUser.uid)
+            .then(() => {
+              navigate(`room/${roomId}`, {
+                state: { id: roomId, name: name, uid: currentUser.uid },
+              });
+            })
+            .catch((e) => {});
         }}
       >
         入室

@@ -47,7 +47,6 @@ export const Room: FC = () => {
     let isMounted = true;
 
     if (userInfo) {
-      console.log(userInfo);
       const docRef = db.collection('rooms').doc(`room: ${userInfo.id}`);
       //dbのルームにプレイヤーが来たら対戦 playerを監視
       docRef.collection('player').onSnapshot((Snapshot) => {
