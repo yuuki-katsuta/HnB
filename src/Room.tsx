@@ -4,6 +4,7 @@ import { db } from './firebase';
 import { registerGameData } from './logic/registerGameData';
 import { LogField } from './LogField';
 import { CheckboxField } from './CheckboxField';
+import { Navigate } from 'react-router-dom';
 
 //url直打ち移動、更新、閉じるで発火
 window.addEventListener('beforeunload', (event) => {
@@ -36,85 +37,90 @@ export const Room: FC = () => {
   });
 
   const location = useLocation();
-  const { id, name, uid } = location.state as {
+  const userInfo = location?.state as {
     id: string;
     name: string;
     uid: string;
-  };
+  } | null;
 
   useEffect(() => {
     let isMounted = true;
-    const docRef = db.collection('rooms').doc(`room: ${id}`);
 
-    //dbのルームにプレイヤーが来たら対戦 playerを監視
-    docRef.collection('player').onSnapshot((Snapshot) => {
-      const member: string[] = [];
-      Snapshot.forEach((doc) => {
-        if (doc.data()) {
-          member.push(doc.data().player);
+    if (userInfo) {
+      console.log(userInfo);
+      const docRef = db.collection('rooms').doc(`room: ${userInfo.id}`);
+      //dbのルームにプレイヤーが来たら対戦 playerを監視
+      docRef.collection('player').onSnapshot((Snapshot) => {
+        const member: string[] = [];
+        Snapshot.forEach((doc) => {
+          if (doc.data()) {
+            member.push(doc.data().player);
+          }
+        });
+
+        //初期データ（バトルデータ）2人揃ったら
+        if (member.length === 2) {
+          docRef
+            .collection('player')
+            .doc(userInfo.uid)
+            .get()
+            .then((doc) => {
+              if (doc.exists) {
+                isMounted &&
+                  setUserData({
+                    name: doc.data()?.name,
+                    player: doc.data()?.player,
+                    selectNumber: doc.data()?.selected,
+                  });
+              }
+            });
         }
       });
 
-      //初期データ（バトルデータ）2人揃ったら
-      if (member.length === 2) {
-        docRef
-          .collection('player')
-          .doc(uid)
-          .get()
-          .then((doc) => {
-            if (doc.exists) {
-              isMounted &&
-                setUserData({
-                  name: doc.data()?.name,
-                  player: doc.data()?.player,
-                  selectNumber: doc.data()?.selected,
-                });
-            }
-          });
-      }
-    });
+      //ログ情報を取得してmapで表示
+      docRef.collection('gameData').onSnapshot((Snapshot) => {
+        let log: LogData = [];
+        let player1HitCount = 0;
+        let player2HitCount = 0;
 
-    //ログ情報を取得してmapで表示
-    docRef.collection('gameData').onSnapshot((Snapshot) => {
-      let log: LogData = [];
-      let player1HitCount = 0;
-      let player2HitCount = 0;
+        Snapshot.forEach((doc) => {
+          if (doc.data().player2 && doc.data().player1) {
+            log.push({
+              player2: doc.data().player2,
+              player1: doc.data().player1,
+            });
+          }
+        });
 
-      Snapshot.forEach((doc) => {
-        if (doc.data().player2 && doc.data().player1) {
-          log.push({
-            player2: doc.data().player2,
-            player1: doc.data().player1,
-          });
+        if (log.length > 0) {
+          const lastLogData = log[log.length - 1];
+          player1HitCount = lastLogData.player1.hit;
+          player2HitCount = lastLogData.player2.hit;
+          if (player1HitCount === 3 || player2HitCount === 3) {
+            isMounted && setIsGameSet(true);
+          }
         }
+        isMounted && setLog(log);
       });
-
-      if (log.length > 0) {
-        const lastLogData = log[log.length - 1];
-        player1HitCount = lastLogData.player1.hit;
-        player2HitCount = lastLogData.player2.hit;
-        if (player1HitCount === 3 || player2HitCount === 3) {
-          isMounted && setIsGameSet(true);
-        }
-      }
-      isMounted && setLog(log);
-    });
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [id, uid]);
+  }, [userInfo]);
 
-  return (
+  return !userInfo ? (
+    <Navigate to='/' replace />
+  ) : (
     <div>
-      <p>Room: {id}</p>
+      <p>Room: {userInfo.id}</p>
       {!userData.player ? (
         <p>対戦相手が見つからないよ...</p>
       ) : (
         <div>
           <p>対戦相手が見つかったよ!!</p>
           <p>
-            あなたは、 {name} ({userData.player})
+            あなたは、 {userInfo.name} ({userData.player})
           </p>
           <p>自分の番号: {userData.selectNumber}</p>
           <div>
@@ -129,7 +135,7 @@ export const Room: FC = () => {
                   onClick={async () => {
                     await registerGameData(
                       checkedValues,
-                      id,
+                      userInfo.id,
                       userData.player,
                       setDisabled
                     );
