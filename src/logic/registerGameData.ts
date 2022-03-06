@@ -1,5 +1,6 @@
 import { db } from '../firebase';
 import firebase from 'firebase';
+import { numberValidate } from './numberValidate';
 
 const check = (numArray: number[], playerNumber: number[]) => {
   let hitCount = 0;
@@ -22,6 +23,10 @@ export const registerGameData = async (
   player: string,
   setDisabled: (state: boolean) => void
 ) => {
+  if (!numberValidate(numberArray)) {
+    alert(`無効な数字だよ! 数字は3つ選んでね!`);
+    return;
+  }
   setDisabled(true);
   const docRef = db.collection('rooms').doc(`room: ${id}`);
 
