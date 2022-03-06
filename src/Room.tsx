@@ -1,8 +1,9 @@
 import { FC, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from './firebase';
-import { registerGameData } from './controller';
+import { registerGameData } from './logic/registerGameData';
 import { LogField } from './LogField';
+import { CheckboxField } from './CheckboxField';
 
 //url直打ち移動、更新、閉じるで発火
 window.addEventListener('beforeunload', (event) => {
@@ -25,7 +26,7 @@ type LogData = {
 
 export const Room: FC = () => {
   const [isGemeSet, setIsGameSet] = useState<boolean>(false);
-  const [number, setNumber] = useState<string>('');
+  const [checkedValues, setCheckedValues] = useState<number[]>([]);
   const [disabled, setDisabled] = useState<boolean>(false);
   const [log, setLog] = useState<LogData>([]);
   const [userData, setUserData] = useState<UserData>({
@@ -119,25 +120,26 @@ export const Room: FC = () => {
           <div>
             {!isGemeSet && (
               <>
-                <input
-                  onChange={(e) => setNumber(e.target.value)}
-                  value={number}
+                <CheckboxField
+                  checkedValues={checkedValues}
+                  setCheckedValues={setCheckedValues}
                 />
+                <br />
                 <button
                   onClick={async () => {
                     await registerGameData(
-                      number,
+                      checkedValues,
                       id,
                       userData.player,
                       setDisabled
                     );
-                    setNumber('');
+                    setCheckedValues([]);
                   }}
                   disabled={disabled}
                 >
                   送信!
                 </button>
-                {disabled && <p>相手の入力を待ってます...</p>}
+                {disabled && <span>相手の入力を待ってます...</span>}
               </>
             )}
             {log.length > 0 && <LogField player={userData.player} log={log} />}

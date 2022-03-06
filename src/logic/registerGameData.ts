@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { db } from '../firebase';
 import firebase from 'firebase';
 
 const check = (numArray: number[], playerNumber: number[]) => {
@@ -17,15 +17,13 @@ const check = (numArray: number[], playerNumber: number[]) => {
 };
 
 export const registerGameData = async (
-  number: string,
+  numberArray: number[],
   id: string,
   player: string,
   setDisabled: (state: boolean) => void
 ) => {
   setDisabled(true);
   const docRef = db.collection('rooms').doc(`room: ${id}`);
-  const selectNumber = number.split(',');
-  const numArray = selectNumber.map(Number);
 
   //hit blow をチェックする
   let player1Number: number[] = [];
@@ -41,7 +39,7 @@ export const registerGameData = async (
     turn = doc.data()?.turn;
   });
   const result = check(
-    numArray,
+    numberArray,
     player === 'player1' ? player2Number : player1Number
   );
 
