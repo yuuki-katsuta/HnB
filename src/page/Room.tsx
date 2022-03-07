@@ -6,18 +6,11 @@ import { LogField } from '../components/LogField';
 import { CheckboxField } from '../components/CheckboxField';
 import { Navigate } from 'react-router-dom';
 
-//url直打ち移動、更新、閉じるで発火
-window.addEventListener('beforeunload', (event) => {
-  event.preventDefault();
-  event.returnValue = '';
-});
-//更新後
-window.addEventListener('unload', (e) => {});
-
 type UserData = {
   name: string;
   player: string;
   selectNumber: number[];
+  opponent: string;
 };
 
 type LogData = {
@@ -34,6 +27,7 @@ export const Room: FC = () => {
     player: '',
     name: '',
     selectNumber: [],
+    opponent: '',
   });
 
   const location = useLocation();
@@ -50,15 +44,16 @@ export const Room: FC = () => {
       const docRef = db.collection('rooms').doc(`room: ${userInfo.id}`);
       //dbのルームにプレイヤーが来たら対戦 playerを監視
       docRef.collection('player').onSnapshot((Snapshot) => {
-        const member: string[] = [];
+        const member: { id: string; name: string }[] = [];
         Snapshot.forEach((doc) => {
           if (doc.data()) {
-            member.push(doc.data().player);
+            member.push({ id: doc.data().uid, name: doc.data().name });
           }
         });
 
         //初期データ（バトルデータ）2人揃ったら
         if (member.length === 2) {
+          const opponentData = member.find((user) => user.id !== userInfo.uid);
           docRef
             .collection('player')
             .doc(userInfo.uid)
@@ -70,6 +65,7 @@ export const Room: FC = () => {
                     name: doc.data()?.name,
                     player: doc.data()?.player,
                     selectNumber: doc.data()?.selected,
+                    opponent: opponentData?.name || '',
                   });
               }
             });
@@ -113,14 +109,14 @@ export const Room: FC = () => {
   ) : (
     <div className='container'>
       <h4>Room: {userInfo.id}</h4>
-      {!userData.player ? (
+      {!userData.player || !userData.opponent ? (
         <p>対戦相手が見つからないよ...</p>
       ) : (
         <div>
           <div className='roomInfo-field'>
             <p>対戦相手が見つかったよ!!</p>
             <p>
-              あなたは、 {userInfo.name} ({userData.player})
+              {userData.name} vs {userData.opponent}
             </p>
             <p>自分の番号: {userData.selectNumber}</p>
           </div>
