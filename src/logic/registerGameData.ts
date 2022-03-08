@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import firebase from 'firebase';
+import firebase from 'firebase/app';
 import { numberValidate } from './numberValidate';
 
 const check = (numArray: number[], playerNumber: number[]) => {

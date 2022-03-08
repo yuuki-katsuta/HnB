@@ -34,13 +34,13 @@ export const LogField: FC<Props> = ({ log, player }) => {
         <p>あなたの負けです...</p>
       )}
       {log.map((logData, index: number) => (
-        <p key={index}>
+        <div key={index}>
           {player === 'player1' ? (
             <p>
               あなた: 選んだ数字: {logData.player1.ownSelect}, hit:
               {logData.player1.hit}, blow:{logData.player1.blow}
               <br />
-              あいて :選んだ数字:{logData.player2.ownSelect}, hit:
+              あいて: 選んだ数字: {logData.player2.ownSelect}, hit:
               {logData.player2.hit}, blow:{logData.player2.blow}
               <br />
               ==================
@@ -56,7 +56,7 @@ export const LogField: FC<Props> = ({ log, player }) => {
               ==================
             </p>
           )}
-        </p>
+        </div>
       ))}
     </div>
   );

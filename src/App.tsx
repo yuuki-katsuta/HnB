@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { Room } from './page/Room';
 import { useSetRecoilState } from 'recoil';
 import { currentUserState } from './store/authState';
-import firebase from 'firebase';
+import firebase from 'firebase/app';
 
 function App() {
   const setCurrentUser = useSetRecoilState<firebase.User | null>(
@@ -17,7 +17,7 @@ function App() {
       // 未ログイン時
       if (!user) {
         // 匿名ログインする
-        auth.signInAnonymously();
+        await auth.signInAnonymously();
       }
       // ログイン時
       else {
