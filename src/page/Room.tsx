@@ -73,30 +73,33 @@ export const Room: FC = () => {
       });
 
       //ログ情報を取得してmapで表示
-      docRef.collection('gameData').onSnapshot((Snapshot) => {
-        let log: LogData = [];
-        let player1HitCount = 0;
-        let player2HitCount = 0;
+      docRef
+        .collection('gameData')
+        .orderBy('createdAt', 'asc')
+        .onSnapshot((Snapshot) => {
+          let log: LogData = [];
+          let player1HitCount = 0;
+          let player2HitCount = 0;
 
-        Snapshot.forEach((doc) => {
-          if (doc.data().player2 && doc.data().player1) {
-            log.push({
-              player2: doc.data().player2,
-              player1: doc.data().player1,
-            });
+          Snapshot.forEach((doc) => {
+            if (doc.data().player2 && doc.data().player1) {
+              log.push({
+                player2: doc.data().player2,
+                player1: doc.data().player1,
+              });
+            }
+          });
+
+          if (log.length > 0) {
+            const lastLogData = log[log.length - 1];
+            player1HitCount = lastLogData.player1.hit;
+            player2HitCount = lastLogData.player2.hit;
+            if (player1HitCount === 3 || player2HitCount === 3) {
+              isMounted && setIsGameSet(true);
+            }
           }
+          isMounted && setLog(log);
         });
-
-        if (log.length > 0) {
-          const lastLogData = log[log.length - 1];
-          player1HitCount = lastLogData.player1.hit;
-          player2HitCount = lastLogData.player2.hit;
-          if (player1HitCount === 3 || player2HitCount === 3) {
-            isMounted && setIsGameSet(true);
-          }
-        }
-        isMounted && setLog(log);
-      });
     }
 
     return () => {
