@@ -1,17 +1,16 @@
-import { FC } from 'react';
+import { FC, memo } from 'react';
+import { LogData, RoomData } from '../page/Room';
 
 type Props = {
-  player: string;
-  log: {
-    player2: { blow: number; hit: number; ownSelect: number[] };
-    player1: { blow: number; hit: number; ownSelect: number[] };
-  }[];
+  roomData: RoomData;
+  log: LogData;
 };
 
 let player1HitCount = 0;
 let player2HitCount = 0;
 
-export const LogField: FC<Props> = ({ log, player }) => {
+export const LogField: FC<Props> = memo(({ log, roomData }) => {
+  const player = roomData.player;
   const lastLogData = log[log.length - 1];
   player1HitCount = lastLogData.player1.hit;
   player2HitCount = lastLogData.player2.hit;
@@ -20,19 +19,29 @@ export const LogField: FC<Props> = ({ log, player }) => {
   return (
     <div>
       <p>---ログ---</p>
-      {draw && <p>引き分けだよ!!</p>}
-      {player1HitCount === 3 && player === 'player1' && !draw && (
+      {draw ? (
+        <p>引き分けだよ!!</p>
+      ) : (
+        player1HitCount === 3 &&
+        player === 'player1' &&
+        !draw && <p>あなたの勝利です!!</p>
+      )}
+      {player1HitCount === 3 && player === 'player2' && (
+        <div>
+          <p>あなたの負けです...</p>
+          <p>相手の数字は、{roomData.opponentSelectNumber}です！</p>
+        </div>
+      )}
+      {player2HitCount === 3 && player === 'player2' && (
         <p>あなたの勝利です!!</p>
       )}
-      {player1HitCount === 3 && player === 'player2' && !draw && (
-        <p>あなたの負けです...</p>
+      {player2HitCount === 3 && player === 'player1' && (
+        <div>
+          <p>あなたの負けです...</p>
+          <p>相手の数字は、{roomData.opponentSelectNumber}です！</p>
+        </div>
       )}
-      {player2HitCount === 3 && player === 'player2' && !draw && (
-        <p>あなたの勝利です!!</p>
-      )}
-      {player2HitCount === 3 && player === 'player1' && !draw && (
-        <p>あなたの負けです...</p>
-      )}
+
       {log.map((logData, index: number) => (
         <div key={index}>
           {player === 'player1' ? (
@@ -60,4 +69,4 @@ export const LogField: FC<Props> = ({ log, player }) => {
       ))}
     </div>
   );
-};
+});

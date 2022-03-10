@@ -6,14 +6,15 @@ import { LogField } from '../components/LogField';
 import { CheckboxField } from '../components/CheckboxField';
 import { Navigate } from 'react-router-dom';
 
-type UserData = {
+export type RoomData = {
   name: string;
   player: string;
   selectNumber: number[];
   opponent: string;
+  opponentSelectNumber: number[];
 };
 
-type LogData = {
+export type LogData = {
   player2: { blow: number; hit: number; ownSelect: number[] };
   player1: { blow: number; hit: number; ownSelect: number[] };
 }[];
@@ -23,11 +24,12 @@ export const Room: FC = () => {
   const [checkedValues, setCheckedValues] = useState<number[]>([]);
   const [disabled, setDisabled] = useState<boolean>(false);
   const [log, setLog] = useState<LogData>([]);
-  const [userData, setUserData] = useState<UserData>({
+  const [roomData, setRoomData] = useState<RoomData>({
     player: '',
     name: '',
     selectNumber: [],
     opponent: '',
+    opponentSelectNumber: [],
   });
 
   const location = useLocation();
@@ -44,10 +46,14 @@ export const Room: FC = () => {
       const docRef = db.collection('rooms').doc(`room: ${userInfo.id}`);
       //dbのルームにプレイヤーが来たら対戦 playerを監視
       docRef.collection('player').onSnapshot((Snapshot) => {
-        const member: { id: string; name: string }[] = [];
+        const member: { id: string; name: string; selected: number[] }[] = [];
         Snapshot.forEach((doc) => {
           if (doc.data()) {
-            member.push({ id: doc.data().uid, name: doc.data().name });
+            member.push({
+              id: doc.data().uid,
+              name: doc.data().name,
+              selected: doc.data().selected,
+            });
           }
         });
 
@@ -59,13 +65,14 @@ export const Room: FC = () => {
             .doc(userInfo.uid)
             .get()
             .then((doc) => {
-              if (doc.exists) {
+              if (doc.exists && opponentData) {
                 isMounted &&
-                  setUserData({
+                  setRoomData({
                     name: doc.data()?.name,
                     player: doc.data()?.player,
                     selectNumber: doc.data()?.selected,
-                    opponent: opponentData?.name || '',
+                    opponent: opponentData.name,
+                    opponentSelectNumber: opponentData.selected,
                   });
               }
             });
@@ -112,16 +119,16 @@ export const Room: FC = () => {
   ) : (
     <div className='container'>
       <h4>Room: {userInfo.id}</h4>
-      {!userData.player || !userData.opponent ? (
+      {!roomData.player || !roomData.opponent ? (
         <p>対戦相手が見つからないよ...</p>
       ) : (
         <div>
           <div className='roomInfo-field'>
             <p>対戦相手が見つかったよ!!</p>
             <p>
-              {userData.name} vs {userData.opponent}
+              {roomData.name} vs {roomData.opponent}
             </p>
-            <p>自分の番号: {userData.selectNumber}</p>
+            <p>自分の番号: {roomData.selectNumber}</p>
           </div>
           <div>
             {!isGemeSet && (
@@ -136,7 +143,7 @@ export const Room: FC = () => {
                     await registerGameData(
                       checkedValues,
                       userInfo.id,
-                      userData.player,
+                      roomData.player,
                       setDisabled
                     );
                     setCheckedValues([]);
@@ -148,7 +155,7 @@ export const Room: FC = () => {
                 {disabled && <span>相手の入力を待ってます...</span>}
               </>
             )}
-            {log.length > 0 && <LogField player={userData.player} log={log} />}
+            {log.length > 0 && <LogField roomData={roomData} log={log} />}
           </div>
         </div>
       )}
