@@ -50,14 +50,14 @@ export const registerRoom = async (
       .runTransaction(async (transaction) => {
         transaction.set(docRef, {
           turn: 1,
-          player1Trycount: 0,
-          player2Trycount: 0,
           player1: name,
           player2: '',
           player1Number: numberList,
           player2Number: null,
           player1Added: false,
           player2Added: false,
+          player1Retry: false,
+          player2Retry: false,
         });
         const docPlayerRef = ref.doc(userUid);
         transaction.set(docPlayerRef, {

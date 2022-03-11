@@ -33,14 +33,10 @@ export const registerGameData = async (
   //hit blow をチェックする
   let player1Number: number[] = [];
   let player2Number: number[] = [];
-  let player1Trycount: number = 0;
-  let player2Trycount: number = 0;
   let turn: number = 0;
   await docRef.get().then((doc) => {
     player1Number = doc.data()?.player1Number;
     player2Number = doc.data()?.player2Number;
-    player1Trycount = doc.data()?.player1Trycount;
-    player2Trycount = doc.data()?.player2Trycount;
     turn = doc.data()?.turn;
   });
   const result = check(
@@ -57,10 +53,9 @@ export const registerGameData = async (
       { merge: true }
     );
     await docRef.update({
-      player1Trycount: player1Trycount++,
       player1Added: true,
     });
-  } else {
+  } else if (player === 'player2') {
     await docRef.collection('gameData').doc(`turn: ${turn.toString()}`).set(
       {
         player2: result,
@@ -69,7 +64,6 @@ export const registerGameData = async (
       { merge: true }
     );
     await docRef.update({
-      player2Trycount: player2Trycount++,
       player2Added: true,
     });
   }

@@ -58,7 +58,7 @@ export const Home: FC = () => {
             registerRoom(roomId, name, checkedValues, currentUser.uid)
               .then(() => {
                 navigate(`room/${roomId}`, {
-                  state: { id: roomId, name: name, uid: currentUser.uid },
+                  state: { id: roomId, uid: currentUser.uid },
                 });
               })
               .catch((e) => {});
