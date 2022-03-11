@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../firebase';
 import { registerGameData } from '../logic/registerGameData';
@@ -6,19 +6,7 @@ import { LogField } from '../components/LogField';
 import { CheckboxField } from '../components/CheckboxField';
 import { Navigate } from 'react-router-dom';
 import { resetGame } from '../logic/resetGame';
-
-export type RoomData = {
-  name: string;
-  player: string;
-  selectNumber: number[];
-  opponent: string;
-  opponentSelectNumber: number[];
-};
-
-export type LogData = {
-  player2: { blow: number; hit: number; ownSelect: number[] };
-  player1: { blow: number; hit: number; ownSelect: number[] };
-}[];
+import { LogData, RoomData, LocationState } from '../types';
 
 export const Room: FC = () => {
   const [isGemeSet, setIsGameSet] = useState<boolean>(false);
@@ -34,17 +22,13 @@ export const Room: FC = () => {
   });
 
   const location = useLocation();
-  const userInfo = location?.state as {
-    id: string;
-    uid: string;
-  } | null;
+  const userInfo = location.state as LocationState;
 
   useEffect(() => {
     let isMounted = true;
 
     if (userInfo) {
       const docRef = db.collection('rooms').doc(`room: ${userInfo.id}`);
-      //dbのルームにプレイヤーが来たら対戦 playerを監視
       docRef.collection('player').onSnapshot((Snapshot) => {
         const member: { id: string; name: string; selected: number[] }[] = [];
         Snapshot.forEach((doc) => {
@@ -56,8 +40,6 @@ export const Room: FC = () => {
             });
           }
         });
-
-        //初期データ（バトルデータ）2人揃ったら
         if (member.length === 2) {
           const opponentData = member.find((user) => user.id !== userInfo.uid);
           docRef
@@ -65,21 +47,18 @@ export const Room: FC = () => {
             .doc(userInfo.uid)
             .get()
             .then((doc) => {
-              if (doc.exists && opponentData) {
-                isMounted &&
-                  setRoomData({
-                    name: doc.data()?.name,
-                    player: doc.data()?.player,
-                    selectNumber: doc.data()?.selected,
-                    opponent: opponentData.name,
-                    opponentSelectNumber: opponentData.selected,
-                  });
+              if (doc.exists && opponentData && isMounted) {
+                setRoomData({
+                  name: doc.data()?.name,
+                  player: doc.data()?.player,
+                  selectNumber: doc.data()?.selected,
+                  opponent: opponentData.name,
+                  opponentSelectNumber: opponentData.selected,
+                });
               }
             });
         }
       });
-
-      //ログ情報を取得してmapで表示
       docRef
         .collection('gameData')
         .orderBy('createdAt', 'asc')
@@ -108,11 +87,33 @@ export const Room: FC = () => {
           isMounted && setLog(log);
         });
     }
-
     return () => {
       isMounted = false;
     };
   }, [userInfo]);
+
+  const reset = useCallback(
+    (id: string, uid: string) => {
+      setDisabled(true);
+      resetGame(checkedValues, `room: ${id}`, uid, setIsGameSet, setDisabled)
+        .then(() => {
+          setCheckedValues([]);
+        })
+        .catch(function (error) {
+          alert(error.message);
+        });
+    },
+    [checkedValues]
+  );
+
+  const add = useCallback(
+    (id: string) => {
+      registerGameData(checkedValues, id, roomData.player, setDisabled)
+        .then(() => setCheckedValues([]))
+        .catch((e) => alert(e.message));
+    },
+    [checkedValues, roomData]
+  );
 
   return !userInfo ? (
     <Navigate to='/' replace />
@@ -138,19 +139,7 @@ export const Room: FC = () => {
                   setCheckedValues={setCheckedValues}
                 />
                 <br />
-                <button
-                  onClick={() => {
-                    registerGameData(
-                      checkedValues,
-                      userInfo.id,
-                      roomData.player,
-                      setDisabled
-                    )
-                      .then(() => setCheckedValues([]))
-                      .catch((e) => alert(e.message));
-                  }}
-                  disabled={disabled}
-                >
+                <button onClick={() => add(userInfo.id)} disabled={disabled}>
                   送信!
                 </button>
                 {disabled && <span>相手の入力を待ってます...</span>}
@@ -166,22 +155,7 @@ export const Room: FC = () => {
                   />
                   <button
                     style={{ marginTop: '8px' }}
-                    onClick={() => {
-                      setDisabled(true);
-                      resetGame(
-                        checkedValues,
-                        `room: ${userInfo.id}`,
-                        userInfo.uid,
-                        setIsGameSet,
-                        setDisabled
-                      )
-                        .then(() => {
-                          setCheckedValues([]);
-                        })
-                        .catch(function (error) {
-                          alert(error.message);
-                        });
-                    }}
+                    onClick={() => reset(userInfo.id, userInfo.uid)}
                     disabled={disabled}
                   >
                     もう一度あそぶ

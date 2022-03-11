@@ -36,9 +36,7 @@ export const Home: FC = () => {
             placeholder='あなたのニックネーム'
             maxLength={10}
             value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-            }}
+            onChange={(e) => setName(e.target.value)}
           />
         </div>
         <div className='input-field'>
@@ -46,9 +44,7 @@ export const Home: FC = () => {
           <input
             maxLength={10}
             value={roomId}
-            onChange={(e) => {
-              setRoomId(e.target.value);
-            }}
+            onChange={(e) => setRoomId(e.target.value)}
           />
         </div>
       </div>
