@@ -23,10 +23,8 @@ export const registerGameData = async (
   player: string,
   setDisabled: (state: boolean) => void
 ) => {
-  if (!numberValidate(numberArray)) {
-    alert(`無効な数字だよ! 数字は3つ選んでね!`);
-    return;
-  }
+  if (!numberValidate(numberArray))
+    throw new Error(`無効な数字だよ! 数字は3つ選んでね!`);
   setDisabled(true);
   const docRef = db.collection('rooms').doc(`room: ${id}`);
 

@@ -139,14 +139,15 @@ export const Room: FC = () => {
                 />
                 <br />
                 <button
-                  onClick={async () => {
-                    await registerGameData(
+                  onClick={() => {
+                    registerGameData(
                       checkedValues,
                       userInfo.id,
                       roomData.player,
                       setDisabled
-                    );
-                    setCheckedValues([]);
+                    )
+                      .then(() => setCheckedValues([]))
+                      .catch((e) => alert(e.message));
                   }}
                   disabled={disabled}
                 >

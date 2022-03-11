@@ -61,7 +61,7 @@ export const Home: FC = () => {
                   state: { id: roomId, uid: currentUser.uid },
                 });
               })
-              .catch((e) => {});
+              .catch((e) => alert(e.message));
           }}
         >
           入室
