@@ -5,6 +5,7 @@ import { registerGameData } from '../logic/registerGameData';
 import { LogField } from '../components/LogField';
 import { CheckboxField } from '../components/CheckboxField';
 import { Navigate } from 'react-router-dom';
+import { resetGame } from '../logic/resetGame';
 
 export type RoomData = {
   name: string;
@@ -35,7 +36,6 @@ export const Room: FC = () => {
   const location = useLocation();
   const userInfo = location?.state as {
     id: string;
-    name: string;
     uid: string;
   } | null;
 
@@ -131,7 +131,7 @@ export const Room: FC = () => {
             <p>自分の番号: {roomData.selectNumber}</p>
           </div>
           <div>
-            {!isGemeSet && (
+            {!isGemeSet ? (
               <>
                 <CheckboxField
                   checkedValues={checkedValues}
@@ -154,6 +154,40 @@ export const Room: FC = () => {
                 </button>
                 {disabled && <span>相手の入力を待ってます...</span>}
               </>
+            ) : (
+              <div>
+                <p>ゲーム終了!!</p>
+                <p>もう一度遊ぶ場合は、数字を選んでね</p>
+                <div>
+                  <CheckboxField
+                    checkedValues={checkedValues}
+                    setCheckedValues={setCheckedValues}
+                  />
+                  <button
+                    style={{ marginTop: '8px' }}
+                    onClick={() => {
+                      setDisabled(true);
+                      resetGame(
+                        checkedValues,
+                        `room: ${userInfo.id}`,
+                        userInfo.uid,
+                        setIsGameSet,
+                        setDisabled
+                      )
+                        .then(() => {
+                          setCheckedValues([]);
+                        })
+                        .catch(function (error) {
+                          alert(error.message);
+                        });
+                    }}
+                    disabled={disabled}
+                  >
+                    もう一度あそぶ
+                  </button>
+                </div>
+                {disabled && <p id='text'>相手の入力をまってます...</p>}
+              </div>
             )}
             {log.length > 0 && <LogField roomData={roomData} log={log} />}
           </div>
