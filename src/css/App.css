@@ -45,3 +45,7 @@
 #reset {
   margin-right: 16px;
 }
+.log {
+  text-align: left;
+  display: inline-block
+}

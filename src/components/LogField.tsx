@@ -45,7 +45,7 @@ export const LogField: FC<Props> = memo(({ log, roomData }) => {
       {log.map((logData, index: number) => (
         <div key={index}>
           {player === 'player1' ? (
-            <p>
+            <p className='log'>
               あなた: 選んだ数字: {logData.player1.ownSelect}, hit:
               {logData.player1.hit}, blow:{logData.player1.blow}
               <br />
@@ -55,7 +55,7 @@ export const LogField: FC<Props> = memo(({ log, roomData }) => {
               ==================
             </p>
           ) : (
-            <p>
+            <p className='log'>
               あなた: 選んだ数字: {logData.player2.ownSelect}, hit:
               {logData.player2.hit}, blow:{logData.player2.blow}
               <br />
