@@ -80,8 +80,6 @@ export const registerGameData = async (
     if (doc.data()?.player1Added && doc.data()?.player2Added) {
       await docRef.update({
         turn: turn + 1,
-      });
-      await docRef.update({
         player1Added: false,
         player2Added: false,
       });
