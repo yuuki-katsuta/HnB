@@ -19,7 +19,7 @@
   margin-right: 8px;
 }
 .roomInfo-field {
-  text-align: left;
+  text-align: center;
   display: inline-block;
   margin-bottom: 16px;
 }
@@ -48,4 +48,9 @@
 .log {
   text-align: left;
   display: inline-block
+}
+.button-wrapper {
+  display: flex;
+  justify-content: space-around;
+  width: 120px;
 }
