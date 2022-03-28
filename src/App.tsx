@@ -42,7 +42,7 @@ const App: FC = () => {
   return !roomInfo.roomId && !roomInfo.userUid ? (
     <Home setRoomInfo={setRoomInfo} />
   ) : (
-    <Room roomInfo={roomInfo} />
+    <Room roomInfo={roomInfo} setRoomInfo={setRoomInfo} />
   );
 };
 

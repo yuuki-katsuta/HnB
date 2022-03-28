@@ -7,9 +7,10 @@ import { resetGame } from '../logic/resetGame';
 import { LogData, RoomData } from '../types';
 import { RoomInfo } from '../types';
 
-export const Room: VFC<{ roomInfo: RoomInfo }> = ({
-  roomInfo: { roomId, userUid },
-}) => {
+export const Room: VFC<{
+  roomInfo: RoomInfo;
+  setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
+}> = ({ roomInfo: { roomId, userUid }, setRoomInfo }) => {
   const [isGemeSet, setIsGameSet] = useState<boolean>(false);
   const [checkedValues, setCheckedValues] = useState<number[]>([]);
   const [disabled, setDisabled] = useState<boolean>(false);
@@ -112,15 +113,22 @@ export const Room: VFC<{ roomInfo: RoomInfo }> = ({
     [checkedValues, roomData]
   );
 
+  const leave = useCallback(() => {
+    window.confirm('退出しますか??') &&
+      setRoomInfo({ roomId: '', userUid: '' });
+  }, [setRoomInfo]);
+
   return (
     <div className='container'>
       <h4>Room: {roomId}</h4>
       {!roomData.player || !roomData.opponent ? (
-        <p>対戦相手が見つからないよ...</p>
+        <div>
+          <p>対戦相手が見つからないよ...</p>
+          <button onClick={() => leave()}>退出</button>
+        </div>
       ) : (
         <div>
           <div className='roomInfo-field'>
-            <p>対戦相手が見つかったよ!!</p>
             <p>
               {roomData.name} vs {roomData.opponent}
             </p>
@@ -134,10 +142,16 @@ export const Room: VFC<{ roomInfo: RoomInfo }> = ({
                   setCheckedValues={setCheckedValues}
                 />
                 <br />
-                <button onClick={() => add(roomId)} disabled={disabled}>
-                  送信!
-                </button>
-                {disabled && <span>相手の入力を待ってます...</span>}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <div className='button-wrapper'>
+                    <button onClick={() => leave()}>退出</button>
+                    <button onClick={() => add(roomId)} disabled={disabled}>
+                      送信!
+                    </button>
+                  </div>
+                  {disabled && <span>相手の入力を待ってます...</span>}
+                </div>
+                <br />
               </>
             ) : (
               <div>
@@ -148,13 +162,18 @@ export const Room: VFC<{ roomInfo: RoomInfo }> = ({
                     checkedValues={checkedValues}
                     setCheckedValues={setCheckedValues}
                   />
-                  <button
-                    style={{ marginTop: '8px' }}
-                    onClick={() => reset(roomId, userUid)}
-                    disabled={disabled}
-                  >
-                    もう一度あそぶ
-                  </button>
+                  <div style={{ marginTop: '8px' }}>
+                    <button onClick={() => leave()} style={{ margin: '0 4px' }}>
+                      退出
+                    </button>
+                    <button
+                      style={{ margin: '0 4px' }}
+                      onClick={() => reset(roomId, userUid)}
+                      disabled={disabled}
+                    >
+                      もう一度あそぶ
+                    </button>
+                  </div>
                 </div>
                 {disabled && <p id='text'>相手の入力をまってます...</p>}
               </div>
