@@ -1,14 +1,15 @@
-import { FC, useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { VFC, useCallback, useEffect, useState } from 'react';
 import { db } from '../firebase';
 import { registerGameData } from '../logic/registerGameData';
 import { LogField } from '../components/LogField';
 import { CheckboxField } from '../components/CheckboxField';
-import { Navigate } from 'react-router-dom';
 import { resetGame } from '../logic/resetGame';
-import { LogData, RoomData, LocationState } from '../types';
+import { LogData, RoomData } from '../types';
+import { RoomInfo } from '../types';
 
-export const Room: FC = () => {
+export const Room: VFC<{ roomInfo: RoomInfo }> = ({
+  roomInfo: { roomId, userUid },
+}) => {
   const [isGemeSet, setIsGameSet] = useState<boolean>(false);
   const [checkedValues, setCheckedValues] = useState<number[]>([]);
   const [disabled, setDisabled] = useState<boolean>(false);
@@ -21,76 +22,72 @@ export const Room: FC = () => {
     opponentSelectNumber: [],
   });
 
-  const location = useLocation();
-  const userInfo = location.state as LocationState;
-
   useEffect(() => {
     let isMounted = true;
 
-    if (userInfo) {
-      const docRef = db.collection('rooms').doc(`room: ${userInfo.id}`);
-      docRef.collection('player').onSnapshot((Snapshot) => {
-        const member: { id: string; name: string; selected: number[] }[] = [];
-        Snapshot.forEach((doc) => {
-          if (doc.data()) {
-            member.push({
-              id: doc.data().uid,
-              name: doc.data().name,
-              selected: doc.data().selected,
-            });
-          }
-        });
-        if (member.length === 2) {
-          const opponentData = member.find((user) => user.id !== userInfo.uid);
-          docRef
-            .collection('player')
-            .doc(userInfo.uid)
-            .get()
-            .then((doc) => {
-              if (doc.exists && opponentData && isMounted) {
-                setRoomData({
-                  name: doc.data()?.name,
-                  player: doc.data()?.player,
-                  selectNumber: doc.data()?.selected,
-                  opponent: opponentData.name,
-                  opponentSelectNumber: opponentData.selected,
-                });
-              }
-            });
+    const docRef = db.collection('rooms').doc(`room: ${roomId}`);
+    docRef.collection('player').onSnapshot((Snapshot) => {
+      const member: { id: string; name: string; selected: number[] }[] = [];
+      Snapshot.forEach((doc) => {
+        if (doc.data()) {
+          member.push({
+            id: doc.data().uid,
+            name: doc.data().name,
+            selected: doc.data().selected,
+          });
         }
       });
-      docRef
-        .collection('gameData')
-        .orderBy('createdAt', 'asc')
-        .onSnapshot((Snapshot) => {
-          let log: LogData = [];
-          let player1HitCount = 0;
-          let player2HitCount = 0;
-
-          Snapshot.forEach((doc) => {
-            if (doc.data().player2 && doc.data().player1) {
-              log.push({
-                player2: doc.data().player2,
-                player1: doc.data().player1,
+      if (member.length === 2) {
+        const opponentData = member.find((user) => user.id !== userUid);
+        docRef
+          .collection('player')
+          .doc(userUid)
+          .get()
+          .then((doc) => {
+            if (doc.exists && opponentData && isMounted) {
+              setRoomData({
+                name: doc.data()?.name,
+                player: doc.data()?.player,
+                selectNumber: doc.data()?.selected,
+                opponent: opponentData.name,
+                opponentSelectNumber: opponentData.selected,
               });
             }
           });
+      }
+    });
+    docRef
+      .collection('gameData')
+      .orderBy('createdAt', 'asc')
+      .onSnapshot((Snapshot) => {
+        let log: LogData = [];
+        let player1HitCount = 0;
+        let player2HitCount = 0;
 
-          if (log.length > 0) {
-            const lastLogData = log[log.length - 1];
-            player1HitCount = lastLogData.player1.hit;
-            player2HitCount = lastLogData.player2.hit;
-            if (player1HitCount === 3 || player2HitCount === 3) {
-              isMounted && setIsGameSet(true);
-            }
+        Snapshot.forEach((doc) => {
+          if (doc.data().player2 && doc.data().player1) {
+            log.push({
+              player2: doc.data().player2,
+              player1: doc.data().player1,
+            });
           }
-          isMounted && setLog(log);
         });
-    }
+
+        if (log.length > 0) {
+          const lastLogData = log[log.length - 1];
+          player1HitCount = lastLogData.player1.hit;
+          player2HitCount = lastLogData.player2.hit;
+          if (player1HitCount === 3 || player2HitCount === 3) {
+            isMounted && setIsGameSet(true);
+          }
+        }
+        isMounted && setLog(log);
+      });
+
     return () => {
       isMounted = false;
     };
-  }, [userInfo]);
+  }, [userUid, roomId]);
 
   const reset = useCallback(
     (id: string, uid: string) => {
@@ -115,11 +112,9 @@ export const Room: FC = () => {
     [checkedValues, roomData]
   );
 
-  return !userInfo ? (
-    <Navigate to='/' replace />
-  ) : (
+  return (
     <div className='container'>
-      <h4>Room: {userInfo.id}</h4>
+      <h4>Room: {roomId}</h4>
       {!roomData.player || !roomData.opponent ? (
         <p>対戦相手が見つからないよ...</p>
       ) : (
@@ -139,7 +134,7 @@ export const Room: FC = () => {
                   setCheckedValues={setCheckedValues}
                 />
                 <br />
-                <button onClick={() => add(userInfo.id)} disabled={disabled}>
+                <button onClick={() => add(roomId)} disabled={disabled}>
                   送信!
                 </button>
                 {disabled && <span>相手の入力を待ってます...</span>}
@@ -155,7 +150,7 @@ export const Room: FC = () => {
                   />
                   <button
                     style={{ marginTop: '8px' }}
-                    onClick={() => reset(userInfo.id, userInfo.uid)}
+                    onClick={() => reset(roomId, userUid)}
                     disabled={disabled}
                   >
                     もう一度あそぶ

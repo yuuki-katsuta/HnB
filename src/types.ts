@@ -1,3 +1,8 @@
+export type RoomInfo = {
+  roomId: string;
+  userUid: string;
+};
+
 export type RoomData = {
   name: string;
   player: 'player1' | 'player2' | '';

@@ -1,13 +1,15 @@
-import { FC, useState } from 'react';
+import { VFC, useState } from 'react';
 import { CheckboxField } from '../components/CheckboxField';
-import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { currentUserState } from '../store/authState';
 import firebase from 'firebase/app';
 import { registerRoom } from '../logic/registerRoom';
+import { RoomInfo } from '../types';
+type Props = {
+  setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
+};
 
-export const Home: FC = () => {
-  const navigate = useNavigate();
+export const Home: VFC<Props> = ({ setRoomInfo }) => {
   const currentUser = useRecoilValue(currentUserState) as firebase.User;
   const [name, setName] = useState<string>('');
   const [roomId, setRoomId] = useState<string>('');
@@ -53,9 +55,7 @@ export const Home: FC = () => {
           onClick={async () => {
             registerRoom(roomId, name, checkedValues, currentUser.uid)
               .then(() => {
-                navigate(`room/${roomId}`, {
-                  state: { id: roomId, uid: currentUser.uid },
-                });
+                setRoomInfo({ roomId: roomId, userUid: currentUser.uid });
               })
               .catch((e) => alert(e.message));
           }}

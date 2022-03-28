@@ -1,14 +1,19 @@
 import './css/App.css';
-import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import { Home } from './page/Home';
 import { auth, db } from './firebase';
-import { useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Room } from './page/Room';
 import { useSetRecoilState } from 'recoil';
 import { currentUserState } from './store/authState';
 import firebase from 'firebase/app';
+import { RoomInfo } from './types';
 
-function App() {
+const App: FC = () => {
+  const [roomInfo, setRoomInfo] = useState<RoomInfo>({
+    roomId: '',
+    userUid: '',
+  });
+
   const setCurrentUser = useSetRecoilState<firebase.User | null>(
     currentUserState
   );
@@ -33,14 +38,12 @@ function App() {
       setCurrentUser(user);
     });
   }, [setCurrentUser]);
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/room/:id' element={<Room />} />
-      </Routes>
-    </BrowserRouter>
+
+  return !roomInfo.roomId && !roomInfo.userUid ? (
+    <Home setRoomInfo={setRoomInfo} />
+  ) : (
+    <Room roomInfo={roomInfo} />
   );
-}
+};
 
 export default App;
