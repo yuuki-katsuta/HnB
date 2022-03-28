@@ -7,6 +7,11 @@ import { resetGame } from '../logic/resetGame';
 import { LogData, RoomData } from '../types';
 import { RoomInfo } from '../types';
 
+const onUnload = (e: { preventDefault: () => void; returnValue: string }) => {
+  e.preventDefault();
+  e.returnValue = '';
+};
+
 export const Room: VFC<{
   roomInfo: RoomInfo;
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
@@ -25,7 +30,7 @@ export const Room: VFC<{
 
   useEffect(() => {
     let isMounted = true;
-
+    window.addEventListener('beforeunload', onUnload);
     const docRef = db.collection('rooms').doc(`room: ${roomId}`);
     docRef.collection('player').onSnapshot((Snapshot) => {
       const member: { id: string; name: string; selected: number[] }[] = [];
@@ -86,6 +91,7 @@ export const Room: VFC<{
       });
 
     return () => {
+      window.removeEventListener('beforeunload', onUnload);
       isMounted = false;
     };
   }, [userUid, roomId]);
