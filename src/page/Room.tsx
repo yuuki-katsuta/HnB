@@ -1,11 +1,12 @@
 import { VFC, useCallback, useEffect, useState } from 'react';
-import { db } from '../firebase';
 import { registerGameData } from '../logic/registerGameData';
 import { LogField } from '../components/LogField';
 import { CheckboxField } from '../components/CheckboxField';
 import { resetGame } from '../logic/resetGame';
-import { LogData, RoomData } from '../types';
+import { LogData } from '../types';
 import { RoomInfo } from '../types';
+import { initRoomData } from '../logic/initRoomInfo';
+import { db } from '../firebase';
 
 const onUnload = (e: { preventDefault: () => void; returnValue: string }) => {
   e.preventDefault();
@@ -15,54 +16,27 @@ const onUnload = (e: { preventDefault: () => void; returnValue: string }) => {
 export const Room: VFC<{
   roomInfo: RoomInfo;
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
-}> = ({ roomInfo: { roomId, userUid }, setRoomInfo }) => {
+}> = ({
+  roomInfo: {
+    roomId,
+    userUid,
+    name,
+    player,
+    selectNumber,
+    opponent,
+    opponentSelectNumber,
+  },
+  setRoomInfo,
+}) => {
   const [isGemeSet, setIsGameSet] = useState<boolean>(false);
   const [checkedValues, setCheckedValues] = useState<number[]>([]);
   const [disabled, setDisabled] = useState<boolean>(false);
   const [log, setLog] = useState<LogData>([]);
-  const [roomData, setRoomData] = useState<RoomData>({
-    player: '',
-    name: '',
-    selectNumber: [],
-    opponent: '',
-    opponentSelectNumber: [],
-  });
 
   useEffect(() => {
-    let isMounted = true;
     window.addEventListener('beforeunload', onUnload);
     const docRef = db.collection('rooms').doc(`room: ${roomId}`);
-    docRef.collection('player').onSnapshot((Snapshot) => {
-      const member: { id: string; name: string; selected: number[] }[] = [];
-      Snapshot.forEach((doc) => {
-        if (doc.data()) {
-          member.push({
-            id: doc.data().uid,
-            name: doc.data().name,
-            selected: doc.data().selected,
-          });
-        }
-      });
-      if (member.length === 2) {
-        const opponentData = member.find((user) => user.id !== userUid);
-        docRef
-          .collection('player')
-          .doc(userUid)
-          .get()
-          .then((doc) => {
-            if (doc.exists && opponentData && isMounted) {
-              setRoomData({
-                name: doc.data()?.name,
-                player: doc.data()?.player,
-                selectNumber: doc.data()?.selected,
-                opponent: opponentData.name,
-                opponentSelectNumber: opponentData.selected,
-              });
-            }
-          });
-      }
-    });
-    docRef
+    const unsubscribe = docRef
       .collection('gameData')
       .orderBy('createdAt', 'asc')
       .onSnapshot((Snapshot) => {
@@ -84,15 +58,14 @@ export const Room: VFC<{
           player1HitCount = lastLogData.player1.hit;
           player2HitCount = lastLogData.player2.hit;
           if (player1HitCount === 3 || player2HitCount === 3) {
-            isMounted && setIsGameSet(true);
+            setIsGameSet(true);
           }
         }
-        isMounted && setLog(log);
+        setLog(log);
       });
-
     return () => {
       window.removeEventListener('beforeunload', onUnload);
-      isMounted = false;
+      unsubscribe();
     };
   }, [userUid, roomId]);
 
@@ -112,22 +85,21 @@ export const Room: VFC<{
 
   const add = useCallback(
     (id: string) => {
-      registerGameData(checkedValues, id, roomData.player, setDisabled)
+      registerGameData(checkedValues, id, player, setDisabled)
         .then(() => setCheckedValues([]))
         .catch((e) => alert(e.message));
     },
-    [checkedValues, roomData]
+    [checkedValues, player]
   );
 
   const leave = useCallback(() => {
-    window.confirm('退出しますか??') &&
-      setRoomInfo({ roomId: '', userUid: '' });
+    window.confirm('退出しますか??') && setRoomInfo(initRoomData());
   }, [setRoomInfo]);
 
   return (
     <div className='container'>
       <h4>Room: {roomId}</h4>
-      {!roomData.player || !roomData.opponent ? (
+      {!player || !opponent ? (
         <div>
           <p>対戦相手が見つからないよ...</p>
           <button onClick={() => leave()}>退出</button>
@@ -135,10 +107,11 @@ export const Room: VFC<{
       ) : (
         <div>
           <div className='roomInfo-field'>
+            <p>対戦相手が見つかったよ!!</p>
             <p>
-              {roomData.name} vs {roomData.opponent}
+              {name} vs {opponent}
             </p>
-            <p>自分の番号: {roomData.selectNumber}</p>
+            <p>自分の番号: {selectNumber}</p>
           </div>
           <div>
             {!isGemeSet ? (
@@ -151,12 +124,16 @@ export const Room: VFC<{
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                   <div className='button-wrapper'>
                     <button onClick={() => leave()}>退出</button>
+                    <button onClick={() => setCheckedValues([])}>
+                      数字をリセット
+                    </button>
                     <button onClick={() => add(roomId)} disabled={disabled}>
                       送信!
                     </button>
                   </div>
-                  {disabled && <span>相手の入力を待ってます...</span>}
                 </div>
+                <br />
+                {disabled && <span>相手の入力を待ってます...</span>}
                 <br />
               </>
             ) : (
@@ -184,7 +161,13 @@ export const Room: VFC<{
                 {disabled && <p id='text'>相手の入力をまってます...</p>}
               </div>
             )}
-            {log.length > 0 && <LogField roomData={roomData} log={log} />}
+            {log.length > 0 && (
+              <LogField
+                player={player}
+                opponentSelectNumber={opponentSelectNumber}
+                log={log}
+              />
+            )}
           </div>
         </div>
       )}

@@ -1,10 +1,13 @@
-import { VFC, useState } from 'react';
+import { VFC, useState, useCallback } from 'react';
 import { CheckboxField } from '../components/CheckboxField';
 import { useRecoilValue } from 'recoil';
 import { currentUserState } from '../store/authState';
 import firebase from 'firebase/app';
 import { registerRoom } from '../logic/registerRoom';
 import { RoomInfo } from '../types';
+import { initRoomData } from '../logic/initRoomInfo';
+import { db } from '../firebase';
+
 type Props = {
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
 };
@@ -14,6 +17,60 @@ export const Home: VFC<Props> = ({ setRoomInfo }) => {
   const [name, setName] = useState<string>('');
   const [roomId, setRoomId] = useState<string>('');
   const [checkedValues, setCheckedValues] = useState<number[]>([]);
+
+  const enter = useCallback(() => {
+    registerRoom(roomId, name, checkedValues, currentUser.uid)
+      .then(() => {
+        setRoomInfo({
+          ...initRoomData(),
+          roomId: roomId,
+          userUid: currentUser.uid,
+        });
+        const docRef = db.collection('rooms').doc(`room: ${roomId}`);
+        const unsubscribe = docRef
+          .collection('player')
+          .onSnapshot((Snapshot) => {
+            const member: {
+              id: string;
+              name: string;
+              selected: number[];
+            }[] = [];
+            Snapshot.forEach((doc) => {
+              if (doc.data()) {
+                member.push({
+                  id: doc.data().uid,
+                  name: doc.data().name,
+                  selected: doc.data().selected,
+                });
+              }
+            });
+            if (member.length === 2) {
+              const opponentData = member.find(
+                (user) => user.id !== currentUser.uid
+              );
+              docRef
+                .collection('player')
+                .doc(currentUser.uid)
+                .get()
+                .then((doc) => {
+                  if (doc.exists && opponentData) {
+                    setRoomInfo({
+                      roomId: roomId,
+                      userUid: currentUser.uid,
+                      name: doc.data()?.name,
+                      player: doc.data()?.player,
+                      selectNumber: doc.data()?.selected,
+                      opponent: opponentData.name,
+                      opponentSelectNumber: opponentData.selected,
+                    });
+                    unsubscribe();
+                  }
+                });
+            }
+          });
+      })
+      .catch((e) => alert(e.message));
+  }, [checkedValues, currentUser, name, roomId, setRoomInfo]);
 
   return (
     <div className='container'>
@@ -51,17 +108,7 @@ export const Home: VFC<Props> = ({ setRoomInfo }) => {
         </div>
       </div>
       <div>
-        <button
-          onClick={async () => {
-            registerRoom(roomId, name, checkedValues, currentUser.uid)
-              .then(() => {
-                setRoomInfo({ roomId: roomId, userUid: currentUser.uid });
-              })
-              .catch((e) => alert(e.message));
-          }}
-        >
-          入室
-        </button>
+        <button onClick={async () => enter()}>入室</button>
       </div>
     </div>
   );

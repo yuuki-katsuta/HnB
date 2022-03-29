@@ -7,13 +7,10 @@ import { useSetRecoilState } from 'recoil';
 import { currentUserState } from './store/authState';
 import firebase from 'firebase/app';
 import { RoomInfo } from './types';
+import { initRoomData } from './logic/initRoomInfo';
 
 const App: FC = () => {
-  const [roomInfo, setRoomInfo] = useState<RoomInfo>({
-    roomId: '',
-    userUid: '',
-  });
-
+  const [roomInfo, setRoomInfo] = useState<RoomInfo>(initRoomData());
   const setCurrentUser = useSetRecoilState<firebase.User | null>(
     currentUserState
   );

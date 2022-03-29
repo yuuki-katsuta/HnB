@@ -1,6 +1,11 @@
 export type RoomInfo = {
   roomId: string;
   userUid: string;
+  name: string;
+  player: 'player1' | 'player2' | '';
+  selectNumber: number[];
+  opponent: string;
+  opponentSelectNumber: number[];
 };
 
 export type RoomData = {

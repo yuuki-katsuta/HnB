@@ -37,9 +37,6 @@ export const CheckboxField: FC<Props> = ({
         })}
       </div>
       <span className='selected-number'>選んだ数字→{checkedValues}</span>
-      <br />
-      <button onClick={() => setCheckedValues([])}>数字をリセット</button>
-      <br />
     </>
   );
 };
