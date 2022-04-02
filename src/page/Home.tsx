@@ -7,6 +7,7 @@ import { registerRoom } from '../logic/registerRoom';
 import { RoomInfo } from '../types';
 import { initRoomData } from '../logic/initRoomInfo';
 import { db } from '../firebase';
+import { setPlayerData } from '../logic/setPlayerData';
 
 type Props = {
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
@@ -27,47 +28,9 @@ export const Home: VFC<Props> = ({ setRoomInfo }) => {
           userUid: currentUser.uid,
         });
         const docRef = db.collection('rooms').doc(`room: ${roomId}`);
-        const unsubscribe = docRef
-          .collection('player')
-          .onSnapshot((Snapshot) => {
-            const member: {
-              id: string;
-              name: string;
-              selected: number[];
-            }[] = [];
-            Snapshot.forEach((doc) => {
-              if (doc.data()) {
-                member.push({
-                  id: doc.data().uid,
-                  name: doc.data().name,
-                  selected: doc.data().selected,
-                });
-              }
-            });
-            if (member.length === 2) {
-              const opponentData = member.find(
-                (user) => user.id !== currentUser.uid
-              );
-              docRef
-                .collection('player')
-                .doc(currentUser.uid)
-                .get()
-                .then((doc) => {
-                  if (doc.exists && opponentData) {
-                    setRoomInfo({
-                      roomId: roomId,
-                      userUid: currentUser.uid,
-                      name: doc.data()?.name,
-                      player: doc.data()?.player,
-                      selectNumber: doc.data()?.selected,
-                      opponent: opponentData.name,
-                      opponentSelectNumber: opponentData.selected,
-                    });
-                    unsubscribe();
-                  }
-                });
-            }
-          });
+        docRef.collection('player').onSnapshot((Snapshot) => {
+          setPlayerData(Snapshot, roomId, currentUser.uid, setRoomInfo);
+        });
       })
       .catch((e) => alert(e.message));
   }, [checkedValues, currentUser, name, roomId, setRoomInfo]);
@@ -83,10 +46,14 @@ export const Home: VFC<Props> = ({ setRoomInfo }) => {
       <span>3つの数字を選びましょう!</span>
       <br />
       <br />
+
       <CheckboxField
         checkedValues={checkedValues}
         setCheckedValues={setCheckedValues}
       />
+      <br />
+      <button onClick={() => setCheckedValues([])}>数字をリセット</button>
+      <br />
       <br />
       <div className='form-wrapper'>
         <div className='input-field'>

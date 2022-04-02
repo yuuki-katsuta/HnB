@@ -16,6 +16,13 @@ export type RoomData = {
   opponentSelectNumber: number[];
 };
 
+export type RoomPlayerInfo = {
+  id: string;
+  name: string;
+  player: '' | 'player1' | 'player2';
+  selected: number[];
+}[];
+
 export type LogData = {
   player2: { blow: number; hit: number; ownSelect: number[] };
   player1: { blow: number; hit: number; ownSelect: number[] };

@@ -1,13 +1,17 @@
 import { db } from '../firebase';
+import { RoomInfo } from '../types';
 import { numberValidate } from './numberValidate';
+import { setPlayerData } from './setPlayerData';
 
 export const resetGame = async (
   numberList: number[],
-  room: string,
+  id: string,
   uid: string,
-  setIsGameSet: (state: boolean) => void,
-  setDisabled: (state: boolean) => void
+  setIsGameSet: React.Dispatch<React.SetStateAction<boolean>>,
+  setDisabled: React.Dispatch<React.SetStateAction<boolean>>,
+  setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>
 ) => {
+  const room = `room: ${id}`;
   const ref = db.collection('rooms').doc(room).collection('gameData');
   const docRef = db.collection('rooms').doc(room);
   const playerRef = docRef.collection('player').doc(uid);
@@ -20,6 +24,11 @@ export const resetGame = async (
 
   if (player === 'player1') {
     await db.runTransaction(async (transaction) => {
+      transaction.update(playerRef, {
+        selected: numberList,
+      });
+    });
+    await db.runTransaction(async (transaction) => {
       transaction.update(docRef, {
         player1Trycount: 0,
         player1Added: false,
@@ -27,23 +36,18 @@ export const resetGame = async (
         player1Number: numberList,
       });
     });
+  } else if (player === 'player2') {
     await db.runTransaction(async (transaction) => {
       transaction.update(playerRef, {
         selected: numberList,
       });
     });
-  } else if (player === 'player2') {
     await db.runTransaction(async (transaction) => {
       transaction.update(docRef, {
         player2Trycount: 0,
         player2Added: false,
         player2Retry: true,
         player2Number: numberList,
-      });
-    });
-    await db.runTransaction(async (transaction) => {
-      transaction.update(playerRef, {
-        selected: numberList,
       });
     });
   }
@@ -61,6 +65,13 @@ export const resetGame = async (
         player1Retry: false,
         player2Retry: false,
       });
+
+      docRef
+        .collection('player')
+        .get()
+        .then((snapshot) => {
+          setPlayerData(snapshot, room, id, setRoomInfo);
+        });
       setIsGameSet(false);
       setDisabled(false);
     }
