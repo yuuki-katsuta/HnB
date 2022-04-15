@@ -42,36 +42,30 @@ export const registerGameData = async (
     player === 'player1' ? player2Number : player1Number
   );
 
-  if (player === 'player1') {
-    await docRef.collection('gameData').doc(`turn: ${turn.toString()}`).set(
-      {
-        player1: result,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-    await docRef.update({
-      player1Added: true,
-    });
-  } else if (player === 'player2') {
-    await docRef.collection('gameData').doc(`turn: ${turn.toString()}`).set(
-      {
-        player2: result,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-    await docRef.update({
-      player2Added: true,
-    });
-  }
-  await docRef.get().then(async (doc) => {
-    //2人が入力したよ!
-    if (doc.data()?.player1Added && doc.data()?.player2Added) {
-      await docRef.update({
-        turn: turn + 1,
-        player1Added: false,
-        player2Added: false,
+  db.runTransaction(async (transaction) => {
+    if (player === 'player1') {
+      transaction.set(
+        docRef.collection('gameData').doc(`turn: ${turn.toString()}`),
+        {
+          player1: result,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+      transaction.update(docRef, {
+        player1Added: true,
+      });
+    } else if (player === 'player2') {
+      transaction.set(
+        docRef.collection('gameData').doc(`turn: ${turn.toString()}`),
+        {
+          player2: result,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+      transaction.update(docRef, {
+        player2Added: true,
       });
     }
   });

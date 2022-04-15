@@ -17,42 +17,37 @@ export const gameDataSubscribe = (
       if (doc.data()?.player1Added && doc.data()?.player2Added) {
         const docRef = db.collection('rooms').doc(`room: ${roomId}`);
 
-        const turn = doc.data()?.turn;
-        turn &&
-          (await docRef
-            .collection('gameData')
-            .doc(`turn: ${turn.toString()}`)
-            .get()
-            .then((doc) => {
-              if (doc.data()?.player2 && doc?.data()?.player1) {
-                isMounted && setDisabled(false);
-                docRef
-                  .collection('gameData')
-                  .orderBy('createdAt', 'asc')
-                  .get()
-                  .then((Snapshot) => {
-                    let log: LogData = [];
-                    let player1HitCount = 0;
-                    let player2HitCount = 0;
+        isMounted && setDisabled(false);
+        await docRef.update({
+          turn: doc.data()?.turn + 1,
+          player1Added: false,
+          player2Added: false,
+        });
+        await docRef
+          .collection('gameData')
+          .orderBy('createdAt', 'asc')
+          .get()
+          .then((Snapshot) => {
+            let log: LogData = [];
+            let player1HitCount = 0;
+            let player2HitCount = 0;
 
-                    Snapshot.forEach((doc) => {
-                      log.push({
-                        player2: doc.data().player2,
-                        player1: doc.data().player1,
-                      });
-                    });
-                    if (log.length > 0) {
-                      const lastLogData = log[log.length - 1];
-                      player1HitCount = lastLogData.player1.hit;
-                      player2HitCount = lastLogData.player2.hit;
-                      if (player1HitCount === 3 || player2HitCount === 3) {
-                        isMounted && setIsGameSet(true);
-                      }
-                    }
-                    isMounted && setLog(log);
-                  });
+            Snapshot.forEach((doc) => {
+              log.push({
+                player2: doc.data().player2,
+                player1: doc.data().player1,
+              });
+            });
+            if (log.length > 0) {
+              const lastLogData = log[log.length - 1];
+              player1HitCount = lastLogData.player1.hit;
+              player2HitCount = lastLogData.player2.hit;
+              if (player1HitCount === 3 || player2HitCount === 3) {
+                isMounted && setIsGameSet(true);
               }
-            }));
+            }
+            isMounted && setLog(log);
+          });
       }
 
       if (doc.data()?.player1Retry && doc.data()?.player2Retry) {

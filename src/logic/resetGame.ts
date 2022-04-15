@@ -17,33 +17,27 @@ export const resetGame = async (
     throw new Error(`無効な数字だよ! 数字は3つ選んでね!`);
   }
 
-  if (player === 'player1') {
-    await db.runTransaction(async (transaction) => {
+  await db.runTransaction(async (transaction) => {
+    if (player === 'player1') {
       transaction.update(playerRef, {
         selected: numberList,
       });
-    });
-    await db.runTransaction(async (transaction) => {
       transaction.update(docRef, {
         player1Trycount: 0,
         player1Added: false,
         player1Retry: true,
         player1Number: numberList,
       });
-    });
-  } else if (player === 'player2') {
-    await db.runTransaction(async (transaction) => {
+    } else if (player === 'player2') {
       transaction.update(playerRef, {
         selected: numberList,
       });
-    });
-    await db.runTransaction(async (transaction) => {
       transaction.update(docRef, {
         player2Trycount: 0,
         player2Added: false,
         player2Retry: true,
         player2Number: numberList,
       });
-    });
-  }
+    }
+  });
 };
