@@ -1,13 +1,12 @@
-import { VFC, useState, useCallback } from 'react';
+import { VFC, useState } from 'react';
 import { CheckboxField } from '../components/CheckboxField';
 import { useRecoilValue } from 'recoil';
 import { currentUserState } from '../store/authState';
 import firebase from 'firebase/app';
-import { registerRoom } from '../logic/registerRoom';
+import { enterRoom } from '../logic/enterRoom';
 import { RoomInfo } from '../types';
 import { initRoomData } from '../logic/initRoomInfo';
-import { db } from '../firebase';
-import { setPlayerData } from '../logic/setPlayerData';
+import { createRoom } from '../logic/createRoom';
 
 type Props = {
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
@@ -18,22 +17,7 @@ export const Home: VFC<Props> = ({ setRoomInfo }) => {
   const [name, setName] = useState<string>('');
   const [roomId, setRoomId] = useState<string>('');
   const [checkedValues, setCheckedValues] = useState<number[]>([]);
-
-  const enter = useCallback(() => {
-    registerRoom(roomId, name, checkedValues, currentUser.uid)
-      .then(() => {
-        setRoomInfo({
-          ...initRoomData(),
-          roomId: roomId,
-          userUid: currentUser.uid,
-        });
-        const docRef = db.collection('rooms').doc(`room: ${roomId}`);
-        docRef.collection('player').onSnapshot((Snapshot) => {
-          setPlayerData(Snapshot, roomId, currentUser.uid, setRoomInfo);
-        });
-      })
-      .catch((e) => alert(e.message));
-  }, [checkedValues, currentUser, name, roomId, setRoomInfo]);
+  const [disabled, setDisabled] = useState(false);
 
   return (
     <div className='container'>
@@ -46,7 +30,6 @@ export const Home: VFC<Props> = ({ setRoomInfo }) => {
       <span>3つの数字を選びましょう!</span>
       <br />
       <br />
-
       <CheckboxField
         checkedValues={checkedValues}
         setCheckedValues={setCheckedValues}
@@ -56,26 +39,71 @@ export const Home: VFC<Props> = ({ setRoomInfo }) => {
       <br />
       <br />
       <div className='form-wrapper'>
-        <div className='input-field'>
-          <label>Name</label>
-          <input
-            placeholder='あなたのニックネーム'
-            maxLength={10}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div className='input-field'>
-          <label>Room</label>
-          <input
-            maxLength={10}
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-          />
-        </div>
+        <table style={{ textAlign: 'left' }}>
+          <tbody>
+            <tr>
+              <td>Name</td>
+              <td>
+                <input
+                  placeholder='あなたのニックネーム'
+                  maxLength={10}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>RoomID</td>
+              <td>
+                <input
+                  maxLength={10}
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
+                />
+              </td>
+              <td>
+                <button
+                  onClick={async () => {
+                    setDisabled(true);
+                    enterRoom(
+                      roomId,
+                      name,
+                      checkedValues,
+                      currentUser.uid,
+                      setRoomInfo
+                    )
+                      .then(() => setDisabled(false))
+                      .catch((e) => {
+                        setDisabled(false);
+                        setRoomInfo(initRoomData);
+                        alert(e.message);
+                      });
+                  }}
+                  disabled={disabled}
+                >
+                  入室
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       <div>
-        <button onClick={async () => enter()}>入室</button>
+        <button
+          onClick={() => {
+            setDisabled(true);
+            createRoom(name, checkedValues, currentUser.uid, setRoomInfo).catch(
+              (e) => {
+                setDisabled(false);
+                setRoomInfo(initRoomData);
+                alert(e.message);
+              }
+            );
+          }}
+          disabled={disabled}
+        >
+          部屋を作る
+        </button>
       </div>
     </div>
   );

@@ -6,7 +6,9 @@ import { resetGame } from '../logic/resetGame';
 import { LogData } from '../types';
 import { RoomInfo } from '../types';
 import { initRoomData } from '../logic/initRoomInfo';
-import { db } from '../firebase';
+import { gameDataSubscribe } from '../logic/gameDataSubscribe';
+import { playerSubscribe } from '../logic/playerSubscribe';
+import { removePlayerData } from '../logic/removePlayerdata';
 
 const onUnload = (e: { preventDefault: () => void; returnValue: string }) => {
   e.preventDefault();
@@ -34,53 +36,41 @@ export const Room: VFC<{
   const [log, setLog] = useState<LogData>([]);
 
   useEffect(() => {
+    let isMounted = true;
     window.addEventListener('beforeunload', onUnload);
-    const docRef = db.collection('rooms').doc(`room: ${roomId}`);
-    const unsubscribe = docRef
-      .collection('gameData')
-      .orderBy('createdAt', 'asc')
-      .onSnapshot((Snapshot) => {
-        let log: LogData = [];
-        let player1HitCount = 0;
-        let player2HitCount = 0;
 
-        Snapshot.forEach((doc) => {
-          if (doc.data().player2 && doc.data().player1) {
-            log.push({
-              player2: doc.data().player2,
-              player1: doc.data().player1,
-            });
-          }
-        });
+    const unGameDataSubscribe = gameDataSubscribe(
+      roomId,
+      setIsGameSet,
+      setDisabled,
+      setLog,
+      isMounted,
+      userUid,
+      setRoomInfo
+    );
+    const unPlayerSubscribe = playerSubscribe(roomId, userUid, setRoomInfo);
 
-        if (log.length > 0) {
-          const lastLogData = log[log.length - 1];
-          player1HitCount = lastLogData.player1.hit;
-          player2HitCount = lastLogData.player2.hit;
-          if (player1HitCount === 3 || player2HitCount === 3) {
-            setIsGameSet(true);
-          }
-        }
-        setLog(log);
-      });
     return () => {
+      isMounted = false;
+      unPlayerSubscribe();
+      unGameDataSubscribe();
       window.removeEventListener('beforeunload', onUnload);
-      unsubscribe();
     };
-  }, [userUid, roomId]);
+  }, [userUid, roomId, setRoomInfo]);
 
   const reset = useCallback(
     (id: string, uid: string) => {
       setDisabled(true);
-      resetGame(checkedValues, id, uid, setIsGameSet, setDisabled, setRoomInfo)
+      resetGame(checkedValues, id, uid, setDisabled)
         .then(() => {
           setCheckedValues([]);
+          setLog([]);
         })
         .catch(function (error) {
           alert(error.message);
         });
     },
-    [checkedValues, setRoomInfo]
+    [checkedValues]
   );
 
   const add = useCallback(
@@ -92,9 +82,12 @@ export const Room: VFC<{
     [checkedValues, player]
   );
 
-  const leave = useCallback(() => {
+  const leave = useCallback(async () => {
+    //await removePlayerData(roomId, userUid);
+    //ログデータも削除する
+    if (!player || !opponent) await removePlayerData(roomId, userUid);
     window.confirm('退出しますか??') && setRoomInfo(initRoomData());
-  }, [setRoomInfo]);
+  }, [setRoomInfo, opponent, player, roomId, userUid]);
 
   const ButtonField: VFC<{
     fresh: boolean;
@@ -117,7 +110,7 @@ export const Room: VFC<{
       <h4>Room: {roomId}</h4>
       {!player || !opponent ? (
         <div>
-          <p>対戦相手が見つからないよ...</p>
+          <p>対戦相手を探しています...</p>
           <button onClick={() => leave()}>退出</button>
         </div>
       ) : (

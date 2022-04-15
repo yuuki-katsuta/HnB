@@ -65,16 +65,6 @@ export const registerGameData = async (
       player2Added: true,
     });
   }
-
-  docRef
-    .collection('gameData')
-    .doc(`turn: ${turn.toString()}`)
-    .onSnapshot((doc) => {
-      if (doc.data()?.player2 && doc?.data()?.player1) {
-        setDisabled(false);
-      }
-    });
-
   await docRef.get().then(async (doc) => {
     //2人が入力したよ!
     if (doc.data()?.player1Added && doc.data()?.player2Added) {

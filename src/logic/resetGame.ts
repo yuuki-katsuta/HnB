@@ -1,18 +1,13 @@
 import { db } from '../firebase';
-import { RoomInfo } from '../types';
 import { numberValidate } from './numberValidate';
-import { setPlayerData } from './setPlayerData';
 
 export const resetGame = async (
   numberList: number[],
   id: string,
   uid: string,
-  setIsGameSet: React.Dispatch<React.SetStateAction<boolean>>,
-  setDisabled: React.Dispatch<React.SetStateAction<boolean>>,
-  setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>
+  setDisabled: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const room = `room: ${id}`;
-  const ref = db.collection('rooms').doc(room).collection('gameData');
   const docRef = db.collection('rooms').doc(room);
   const playerRef = docRef.collection('player').doc(uid);
   const player = await playerRef.get().then((doc) => doc.data()?.player);
@@ -51,29 +46,4 @@ export const resetGame = async (
       });
     });
   }
-
-  docRef.onSnapshot(async (doc) => {
-    if (doc.data()?.player1Retry && doc.data()?.player2Retry) {
-      const snapshot = await ref.get();
-      await Promise.all(
-        snapshot.docs.map(async (doc) => await ref.doc(doc.id).delete())
-      ).catch((error) => alert(error.message));
-      await docRef.update({
-        turn: 0,
-        player1Added: false,
-        player2Added: false,
-        player1Retry: false,
-        player2Retry: false,
-      });
-
-      docRef
-        .collection('player')
-        .get()
-        .then((snapshot) => {
-          setPlayerData(snapshot, room, id, setRoomInfo);
-        });
-      setIsGameSet(false);
-      setDisabled(false);
-    }
-  });
 };
