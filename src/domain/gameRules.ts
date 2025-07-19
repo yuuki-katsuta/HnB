@@ -2,10 +2,10 @@
  * ゲームルールとビジネスロジック
  */
 
-import { GAME_CONFIG } from '../constants';
-import type { PlayerId } from '../types/common';
-import type { GameNumbers } from '../types/game';
-import type { RoomInfo } from '../types/room';
+import { GAME_CONFIG } from '@/constants';
+import type { PlayerId } from '@/types/common';
+import type { GameNumbers } from '@/types/game';
+import type { RoomInfo } from '@/types/room';
 
 /**
  * RoomInfoの初期値を生成

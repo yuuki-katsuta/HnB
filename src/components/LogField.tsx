@@ -1,6 +1,6 @@
 import { FC, memo } from 'react';
 
-import type { GameLog } from '../types/game';
+import type { GameLog } from '@/types/game';
 
 type Props = {
   player: 'player1' | 'player2' | '';

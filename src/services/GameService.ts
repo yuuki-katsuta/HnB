@@ -15,11 +15,11 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 
-import { validateGameNumbers } from '../domain';
-import { db } from '../firebase';
-import { GameError } from '../types/errors';
-import type { GameLog } from '../types/game';
-import type { PlayerList } from '../types/player';
+import { validateGameNumbers } from '@/domain';
+import { db } from '@/firebase';
+import { GameError } from '@/types/errors';
+import type { GameLog } from '@/types/game';
+import type { PlayerList } from '@/types/player';
 import {
   calculateHitAndBlow,
   convertSnapshotToPlayerList,
@@ -27,7 +27,7 @@ import {
   createGameDataRef,
   createPlayersCollectionRef,
   createRoomRef,
-} from '../utils';
+} from '@/utils';
 
 export class GameService {
   /**

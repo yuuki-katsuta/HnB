@@ -4,7 +4,7 @@
 
 import type { DocumentData, QuerySnapshot } from 'firebase/firestore';
 
-import type { PlayerInfo, PlayerList } from '../types/player';
+import type { PlayerInfo, PlayerList } from '@/types/player';
 
 /**
  * QuerySnapshotをPlayerListに変換

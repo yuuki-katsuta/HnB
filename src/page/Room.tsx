@@ -1,9 +1,9 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { CheckboxField } from '../components/CheckboxField';
-import { LogField } from '../components/LogField';
-import { useGame, usePlayers, useRoom } from '../hooks';
-import type { RoomInfo } from '../types';
+import { CheckboxField } from '@/components/CheckboxField';
+import { LogField } from '@/components/LogField';
+import { useGame, usePlayers, useRoom } from '@/hooks';
+import type { RoomInfo } from '@/types';
 
 const onUnload = (e: { preventDefault: () => void; returnValue: string }) => {
   e.preventDefault();

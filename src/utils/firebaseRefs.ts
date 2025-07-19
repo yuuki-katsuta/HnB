@@ -4,8 +4,8 @@
 
 import { collection, doc } from 'firebase/firestore';
 
-import { COLLECTION_NAMES, ROOM_ID_PREFIX } from '../constants';
-import { db } from '../firebase';
+import { COLLECTION_NAMES, ROOM_ID_PREFIX } from '@/constants';
+import { db } from '@/firebase';
 
 /**
  * ルームのドキュメント参照を作成

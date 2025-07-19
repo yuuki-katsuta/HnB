@@ -1,11 +1,11 @@
 import { User } from 'firebase/auth';
 import { FC, useState } from 'react';
 
-import { CheckboxField } from '../components/CheckboxField';
-import { GAME_MESSAGES } from '../constants';
-import { useRoom } from '../hooks';
-import { useAuthStore } from '../store/authState';
-import type { RoomInfo } from '../types';
+import { CheckboxField } from '@/components/CheckboxField';
+import { GAME_MESSAGES } from '@/constants';
+import { useRoom } from '@/hooks';
+import { useAuthStore } from '@/store/authState';
+import type { RoomInfo } from '@/types';
 
 type Props = {
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;

@@ -4,9 +4,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { RoomService } from '../services';
-import type { PlayerInfo, PlayerList } from '../types/player';
-import { findCurrentPlayer, findOpponent } from '../utils';
+import { RoomService } from '@/services';
+import type { PlayerInfo, PlayerList } from '@/types/player';
+import { findCurrentPlayer, findOpponent } from '@/utils';
 
 const roomService = new RoomService();
 

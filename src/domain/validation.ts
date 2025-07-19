@@ -2,8 +2,8 @@
  * バリデーションロジック
  */
 
-import { GAME_CONFIG, GAME_MESSAGES } from '../constants';
-import { ValidationError } from '../types/errors';
+import { GAME_CONFIG, GAME_MESSAGES } from '@/constants';
+import { ValidationError } from '@/types/errors';
 
 /**
  * プレイヤー名のバリデーション

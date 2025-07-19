@@ -4,8 +4,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { GameService } from '../services';
-import type { GameLog } from '../types/game';
+import { GameService } from '@/services';
+import type { GameLog } from '@/types/game';
 
 const gameService = new GameService();
 

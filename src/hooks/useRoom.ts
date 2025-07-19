@@ -4,9 +4,9 @@
 
 import { useCallback, useState } from 'react';
 
-import { createInitialRoomInfo } from '../domain';
-import { RoomService } from '../services';
-import type { CreateRoomParams, JoinRoomParams, RoomInfo } from '../types/room';
+import { createInitialRoomInfo } from '@/domain';
+import { RoomService } from '@/services';
+import type { CreateRoomParams, JoinRoomParams, RoomInfo } from '@/types/room';
 
 const roomService = new RoomService();
 

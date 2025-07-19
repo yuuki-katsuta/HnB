@@ -2,7 +2,7 @@
  * ゲームロジック関連のユーティリティ関数
  */
 
-import type { GameResult } from '../types/game';
+import type { GameResult } from '@/types/game';
 
 /**
  * Hit and Blowの結果を計算
