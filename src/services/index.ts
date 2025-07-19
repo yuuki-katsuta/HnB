@@ -2,5 +2,5 @@
  * サービスレイヤーのエクスポート
  */
 
-export { GameService } from './GameService';
-export { RoomService } from './RoomService';
+export { GameService } from './Game';
+export { RoomService } from './Room';

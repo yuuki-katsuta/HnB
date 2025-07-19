@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { checkGameCompletion } from '@/domain';
 import { GameService } from '@/services';
 import type { GameLog } from '@/types/game';
 
@@ -35,12 +36,12 @@ export const useGame = ({
     if (!isActive || !roomId) return;
 
     const unsubscribe = gameService.subscribeToGameState(roomId, {
-      onTurnComplete: (log) => {
+      onTurnComplete: (log: GameLog) => {
         setGameLog(log);
         setIsDisabled(false);
 
         // ゲーム終了判定
-        const result = gameService.isGameFinished(log);
+        const result = checkGameCompletion(log);
         if (result.isFinished) {
           setIsGameSet(true);
           setWinner(result.winner);
@@ -84,7 +85,7 @@ export const useGame = ({
         await gameService.registerGameData(roomId, userUid, numbers);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : '推測の送信に失敗しました'
+          err instanceof Error ? err.message : '予期せぬエラー発生しました'
         );
         setIsDisabled(false);
         throw err;

@@ -1,5 +1,5 @@
 /**
- * バリデーションロジック
+ * 共通バリデーションロジック
  */
 
 import { GAME_CONFIG, GAME_MESSAGES } from '@/constants';
@@ -7,6 +7,8 @@ import { ValidationError } from '@/types/errors';
 
 /**
  * プレイヤー名のバリデーション
+ * @param name プレイヤー名
+ * @throws ValidationError 無効な名前の場合
  */
 export const validatePlayerName = (name: string): void => {
   if (!name || name.trim() === '') {
@@ -22,6 +24,8 @@ export const validatePlayerName = (name: string): void => {
 
 /**
  * ゲーム数字のバリデーション
+ * @param numbers 数字配列
+ * @throws ValidationError 無効な数字の場合
  */
 export const validateGameNumbers = (numbers: number[]): void => {
   // 数字の個数チェック
@@ -47,6 +51,8 @@ export const validateGameNumbers = (numbers: number[]): void => {
 
 /**
  * ルームIDのバリデーション
+ * @param roomId ルームID
+ * @throws ValidationError 無効なルームIDの場合
  */
 export const validateRoomId = (roomId: string): void => {
   if (!roomId || roomId.trim() === '') {
@@ -56,6 +62,10 @@ export const validateRoomId = (roomId: string): void => {
 
 /**
  * ゲーム参加時の包括的バリデーション
+ * @param name プレイヤー名
+ * @param numbers 数字配列
+ * @param roomId ルームID（オプション）
+ * @throws ValidationError バリデーションエラーの場合
  */
 export const validateGameInput = (
   name: string,
@@ -80,6 +90,10 @@ export interface ValidationResult {
 
 /**
  * 非同期バリデーション（複数項目を一度にチェック）
+ * @param name プレイヤー名
+ * @param numbers 数字配列
+ * @param roomId ルームID（オプション）
+ * @returns バリデーション結果
  */
 export const validateGameInputSafe = (
   name: string,

@@ -1,5 +1,5 @@
 /**
- * Firebase参照作成のユーティリティ関数
+ * Firebase参照作成のインフラストラクチャ層
  */
 
 import { collection, doc } from 'firebase/firestore';
@@ -9,6 +9,8 @@ import { db } from '@/firebase';
 
 /**
  * ルームのドキュメント参照を作成
+ * @param roomId ルームID
+ * @returns Firebase DocumentReference
  */
 export const createRoomRef = (roomId: string) => {
   return doc(
@@ -19,6 +21,8 @@ export const createRoomRef = (roomId: string) => {
 
 /**
  * プレイヤーコレクションの参照を作成
+ * @param roomId ルームID
+ * @returns Firebase CollectionReference
  */
 export const createPlayersCollectionRef = (roomId: string) => {
   const roomRef = createRoomRef(roomId);
@@ -27,6 +31,9 @@ export const createPlayersCollectionRef = (roomId: string) => {
 
 /**
  * 特定プレイヤーのドキュメント参照を作成
+ * @param roomId ルームID
+ * @param playerUid プレイヤーUID
+ * @returns Firebase DocumentReference
  */
 export const createPlayerRef = (roomId: string, playerUid: string) => {
   const playersCollection = createPlayersCollectionRef(roomId);
@@ -35,6 +42,8 @@ export const createPlayerRef = (roomId: string, playerUid: string) => {
 
 /**
  * ゲームデータコレクションの参照を作成
+ * @param roomId ルームID
+ * @returns Firebase CollectionReference
  */
 export const createGameDataCollectionRef = (roomId: string) => {
   const roomRef = createRoomRef(roomId);
@@ -43,6 +52,9 @@ export const createGameDataCollectionRef = (roomId: string) => {
 
 /**
  * 特定ターンのゲームデータ参照を作成
+ * @param roomId ルームID
+ * @param turn ターン数
+ * @returns Firebase DocumentReference
  */
 export const createGameDataRef = (roomId: string, turn: number) => {
   const gameDataCollection = createGameDataCollectionRef(roomId);
@@ -51,6 +63,7 @@ export const createGameDataRef = (roomId: string, turn: number) => {
 
 /**
  * ユーザーコレクションの参照を作成
+ * @returns Firebase CollectionReference
  */
 export const createUsersCollectionRef = () => {
   return collection(db, COLLECTION_NAMES.USERS);
@@ -58,6 +71,8 @@ export const createUsersCollectionRef = () => {
 
 /**
  * 特定ユーザーの参照を作成
+ * @param userUid ユーザーUID
+ * @returns Firebase DocumentReference
  */
 export const createUserRef = (userUid: string) => {
   const usersCollection = createUsersCollectionRef();
@@ -66,6 +81,7 @@ export const createUserRef = (userUid: string) => {
 
 /**
  * ルームコレクションの参照を作成
+ * @returns Firebase CollectionReference
  */
 export const createRoomsCollectionRef = () => {
   return collection(db, COLLECTION_NAMES.ROOMS);

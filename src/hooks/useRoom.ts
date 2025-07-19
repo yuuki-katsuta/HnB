@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { createInitialRoomInfo } from '@/domain';
+import { createInitialRoomInfo } from '@/domain/room/roomLogic';
 import { RoomService } from '@/services';
 import type { CreateRoomParams, JoinRoomParams, RoomInfo } from '@/types/room';
 

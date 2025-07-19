@@ -4,9 +4,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { findCurrentPlayer, findOpponent } from '@/domain/player';
 import { RoomService } from '@/services';
 import type { PlayerInfo, PlayerList } from '@/types/player';
-import { findCurrentPlayer, findOpponent } from '@/utils';
 
 const roomService = new RoomService();
 
@@ -27,16 +27,19 @@ export const usePlayers = ({ roomId, userUid, isActive }: UsePlayersProps) => {
   useEffect(() => {
     if (!isActive || !roomId || !userUid) return;
 
-    const unsubscribe = roomService.subscribeToPlayers(roomId, (playerList) => {
-      setPlayers(playerList);
+    const unsubscribe = roomService.subscribeToPlayers(
+      roomId,
+      (playerList: PlayerList) => {
+        setPlayers(playerList);
 
-      const current = findCurrentPlayer(playerList, userUid);
-      const opp = findOpponent(playerList, userUid);
+        const current = findCurrentPlayer(playerList, userUid);
+        const opp = findOpponent(playerList, userUid);
 
-      setCurrentPlayer(current);
-      setOpponent(opp);
-      setIsWaitingForOpponent(!opp);
-    });
+        setCurrentPlayer(current);
+        setOpponent(opp);
+        setIsWaitingForOpponent(!opp);
+      }
+    );
 
     unsubscribeRef.current = unsubscribe;
 

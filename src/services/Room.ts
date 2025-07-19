@@ -11,20 +11,21 @@ import {
 } from 'firebase/firestore';
 
 import { GAME_MESSAGES } from '@/constants';
-import { canJoinRoom, validateGameInput, validateGameNumbers } from '@/domain';
+import { canJoinRoom } from '@/domain';
+import { findUniqueRoomId } from '@/domain/room';
+import { validateGameInput, validateGameNumbers } from '@/domain/shared';
 import { db } from '@/firebase';
-import { GameError, RoomError } from '@/types/errors';
-import type { GameNumbers } from '@/types/game';
-import type { PlayerList } from '@/types/player';
-import type { CreateRoomParams, JoinRoomParams } from '@/types/room';
 import {
   convertSnapshotToPlayerList,
   createPlayerRef,
   createPlayersCollectionRef,
   createRoomRef,
   createRoomsCollectionRef,
-  findUniqueRoomId,
-} from '@/utils';
+} from '@/infra/firebase';
+import { GameError, RoomError } from '@/types/errors';
+import type { GameNumbers } from '@/types/game';
+import type { PlayerList } from '@/types/player';
+import type { CreateRoomParams, JoinRoomParams } from '@/types/room';
 
 export class RoomService {
   /**

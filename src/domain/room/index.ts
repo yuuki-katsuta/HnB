@@ -1,0 +1,5 @@
+/**
+ * ルームドメインのエクスポート
+ */
+
+export * from './roomLogic';

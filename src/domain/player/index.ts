@@ -1,0 +1,5 @@
+/**
+ * プレイヤードメインのエクスポート
+ */
+
+export * from './playerLogic';

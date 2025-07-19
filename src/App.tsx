@@ -2,16 +2,16 @@ import './css/App.css';
 
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
-import { FC, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { createInitialRoomInfo } from '@/domain';
+import { createInitialRoomInfo } from '@/domain/room/roomLogic';
 import { auth, db } from '@/firebase';
-import { Home } from '@/page/Home';
-import { Room } from '@/page/Room';
 import { useAuthStore } from '@/store/authState';
 import { RoomInfo } from '@/types';
+import { Home } from '@/ui/Home';
+import { Room } from '@/ui/Room';
 
-const App: FC = () => {
+const App = () => {
   const [roomInfo, setRoomInfo] = useState<RoomInfo>(createInitialRoomInfo());
   const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
   useEffect(() => {

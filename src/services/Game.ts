@@ -15,19 +15,19 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 
-import { validateGameNumbers } from '@/domain';
+import { calculateHitAndBlow } from '@/domain/game/hitAndBlow';
+import { validateGameNumbers } from '@/domain/shared';
 import { db } from '@/firebase';
-import { GameError } from '@/types/errors';
-import type { GameLog } from '@/types/game';
-import type { PlayerList } from '@/types/player';
 import {
-  calculateHitAndBlow,
   convertSnapshotToPlayerList,
   createGameDataCollectionRef,
   createGameDataRef,
   createPlayersCollectionRef,
   createRoomRef,
-} from '@/utils';
+} from '@/infra/firebase';
+import { GameError } from '@/types/errors';
+import type { GameLog } from '@/types/game';
+import type { PlayerList } from '@/types/player';
 
 export class GameService {
   /**
@@ -201,30 +201,5 @@ export class GameService {
     const playersCollection = createPlayersCollectionRef(roomId);
     const snapshot = await getDocs(playersCollection);
     return convertSnapshotToPlayerList(snapshot);
-  }
-
-  /**
-   * ゲーム終了判定
-   */
-  isGameFinished(log: GameLog): { isFinished: boolean; winner?: string } {
-    if (log.length === 0) {
-      return { isFinished: false };
-    }
-
-    const lastTurn = log[log.length - 1];
-    const player1Won = lastTurn.player1?.hit === 3;
-    const player2Won = lastTurn.player2?.hit === 3;
-
-    if (player1Won && player2Won) {
-      return { isFinished: true, winner: 'draw' };
-    }
-    if (player1Won) {
-      return { isFinished: true, winner: 'player1' };
-    }
-    if (player2Won) {
-      return { isFinished: true, winner: 'player2' };
-    }
-
-    return { isFinished: false };
   }
 }

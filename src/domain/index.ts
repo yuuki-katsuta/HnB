@@ -2,5 +2,7 @@
  * Domainレイヤーのエクスポート
  */
 
-export * from './gameRules';
-export * from './validation';
+export * from './game';
+export * from './player';
+export * from './room';
+export * from './shared';
