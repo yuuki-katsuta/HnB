@@ -1,20 +1,23 @@
 import { FC, memo } from 'react';
 
-import { LogData } from '../types';
+import type { GameLog } from '../types/game';
 
 type Props = {
   player: 'player1' | 'player2' | '';
   opponentSelectNumber: number[];
-  log: LogData;
+  log: GameLog;
 };
 
 let player1HitCount = 0;
 let player2HitCount = 0;
 
 export const LogField: FC<Props> = memo(({ player, log }) => {
+  if (!log || log.length === 0) {
+    return <div>ログがまだありません</div>;
+  }
   const lastLogData = log[log.length - 1];
-  player1HitCount = lastLogData.player1.hit;
-  player2HitCount = lastLogData.player2.hit;
+  player1HitCount = lastLogData?.player1?.hit || 0;
+  player2HitCount = lastLogData?.player2?.hit || 0;
   const draw = player1HitCount === 3 && player2HitCount === 3;
 
   return (
@@ -36,28 +39,37 @@ export const LogField: FC<Props> = memo(({ player, log }) => {
         </div>
       ) : null}
 
-      {log.map((logData, index: number) => (
-        <div key={index}>
-          {player === 'player1' ? (
-            <p className="log">
-              あなた: 選んだ数字: {logData.player1.ownSelect}, hit:
-              {logData.player1.hit}, blow:{logData.player1.blow}
-              <br />
-              あいて: 選んだ数字: {logData.player2.ownSelect}, hit:
-              {logData.player2.hit}, blow:{logData.player2.blow}
-            </p>
-          ) : (
-            <p className="log">
-              あなた: 選んだ数字: {logData.player2.ownSelect}, hit:
-              {logData.player2.hit}, blow:{logData.player2.blow}
-              <br />
-              あいて: 選んだ数字: {logData.player1.ownSelect}, hit:
-              {logData.player1.hit}, blow:{logData.player1.blow}
-            </p>
-          )}
-          <span style={{ display: 'block' }}>==================</span>
-        </div>
-      ))}
+      {log.map((logData, index: number) => {
+        const player1Data = logData.player1;
+        const player2Data = logData.player2;
+
+        if (!player1Data || !player2Data) {
+          return null;
+        }
+
+        return (
+          <div key={index}>
+            {player === 'player1' ? (
+              <p className="log">
+                あなた: 選んだ数字: {player1Data.ownSelect}, hit:
+                {player1Data.hit}, blow:{player1Data.blow}
+                <br />
+                あいて: 選んだ数字: {player2Data.ownSelect}, hit:
+                {player2Data.hit}, blow:{player2Data.blow}
+              </p>
+            ) : (
+              <p className="log">
+                あなた: 選んだ数字: {player2Data.ownSelect}, hit:
+                {player2Data.hit}, blow:{player2Data.blow}
+                <br />
+                あいて: 選んだ数字: {player1Data.ownSelect}, hit:
+                {player1Data.hit}, blow:{player1Data.blow}
+              </p>
+            )}
+            <span style={{ display: 'block' }}>==================</span>
+          </div>
+        );
+      })}
     </div>
   );
 });

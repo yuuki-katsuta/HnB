@@ -2,13 +2,8 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { CheckboxField } from '../components/CheckboxField';
 import { LogField } from '../components/LogField';
-import { gameDataSubscribe } from '../logic/gameDataSubscribe';
-import { initRoomData } from '../logic/initRoomInfo';
-import { playerSubscribe } from '../logic/playerSubscribe';
-import { registerGameData } from '../logic/registerGameData';
-import { removePlayerData } from '../logic/removePlayerdata';
-import { resetGame } from '../logic/resetGame';
-import { LogData, RoomInfo } from '../types';
+import { useGame, usePlayers, useRoom } from '../hooks';
+import type { RoomInfo } from '../types';
 
 const onUnload = (e: { preventDefault: () => void; returnValue: string }) => {
   e.preventDefault();
@@ -18,76 +13,100 @@ const onUnload = (e: { preventDefault: () => void; returnValue: string }) => {
 export const Room: FC<{
   roomInfo: RoomInfo;
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
-}> = ({
-  roomInfo: {
+}> = ({ roomInfo, setRoomInfo }) => {
+  const { roomId, userUid, name, player, selectNumber } = roomInfo;
+  const [checkedValues, setCheckedValues] = useState<number[]>([]);
+
+  // カスタムフックを使用
+  const { currentPlayer, opponent, isWaitingForOpponent } = usePlayers({
     roomId,
     userUid,
-    name,
-    player,
-    selectNumber,
-    opponent,
-    opponentSelectNumber,
-  },
-  setRoomInfo,
-}) => {
-  const [isGemeSet, setIsGameSet] = useState<boolean>(false);
-  const [checkedValues, setCheckedValues] = useState<number[]>([]);
-  const [disabled, setDisabled] = useState<boolean>(false);
-  const [log, setLog] = useState<LogData>([]);
+    isActive: !!roomId && !!userUid,
+  });
+
+  const handleGameReset = useCallback(() => {
+    // リセット完了時に数字をクリア
+    setCheckedValues([]);
+  }, []);
+
+  const { gameLog, isGameSet, isDisabled, error, submitGuess, clearError } =
+    useGame({
+      roomId,
+      userUid,
+      isActive: !!roomId && !!userUid && !isWaitingForOpponent,
+      onGameReset: handleGameReset,
+    });
+
+  const { leaveRoom, resetGame, isLoading, error: roomError } = useRoom();
 
   useEffect(() => {
-    let isMounted = true;
     window.addEventListener('beforeunload', onUnload);
-
-    const unGameDataSubscribe = gameDataSubscribe(
-      roomId,
-      setIsGameSet,
-      setDisabled,
-      setLog,
-      isMounted,
-      userUid,
-      setRoomInfo
-    );
-    const unPlayerSubscribe = playerSubscribe(roomId, userUid, setRoomInfo);
-
     return () => {
-      isMounted = false;
-      unPlayerSubscribe();
-      unGameDataSubscribe();
       window.removeEventListener('beforeunload', onUnload);
     };
-  }, [userUid, roomId, setRoomInfo]);
+  }, []);
 
-  const reset = useCallback(
-    (id: string, uid: string) => {
-      setDisabled(true);
-      resetGame(checkedValues, id, uid, setDisabled)
-        .then(() => {
-          setCheckedValues([]);
-          setLog([]);
-        })
-        .catch(function (error) {
-          alert(error.message);
-        });
-    },
-    [checkedValues]
-  );
+  const reset = useCallback(async () => {
+    if (checkedValues.length !== 3) {
+      alert('3つの数字を選択してください');
+      return;
+    }
 
-  const add = useCallback(
-    (id: string) => {
-      registerGameData(checkedValues, id, player, setDisabled)
-        .then(() => setCheckedValues([]))
-        .catch((e) => alert(e.message));
-    },
-    [checkedValues, player]
-  );
+    try {
+      await resetGame(roomId, userUid, checkedValues);
+
+      // リセット成功時にroomInfoの選択数字を更新
+      setRoomInfo((prev) => ({
+        ...prev,
+        selectNumber: checkedValues,
+      }));
+
+      // リセット送信後は数字をクリアしない（相手の送信を待つ間は表示維持）
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : 'ゲームリセットに失敗しました'
+      );
+    }
+  }, [checkedValues, resetGame, roomId, userUid, setRoomInfo]);
+
+  const add = useCallback(async () => {
+    if (checkedValues.length !== 3) {
+      alert('3つの数字を選択してください');
+      return;
+    }
+
+    clearError();
+
+    try {
+      await submitGuess(checkedValues);
+      setCheckedValues([]);
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : '推測の送信に失敗しました'
+      );
+    }
+  }, [checkedValues, submitGuess, clearError]);
 
   const leave = useCallback(async () => {
-    //await removePlayerData(roomId, userUid);
-    //ログデータも削除する
-    if (!player || !opponent) await removePlayerData(roomId, userUid);
-    window.confirm('退出しますか??') && setRoomInfo(initRoomData());
-  }, [setRoomInfo, opponent, player, roomId, userUid]);
+    if (!window.confirm('退出しますか？')) return;
+
+    try {
+      await leaveRoom(roomId, userUid);
+      setRoomInfo({
+        roomId: '',
+        userUid: '',
+        name: '',
+        player: '',
+        selectNumber: [],
+        opponent: '',
+        opponentSelectNumber: [],
+      });
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : 'ルーム退出に失敗しました'
+      );
+    }
+  }, [leaveRoom, setRoomInfo, roomId, userUid]);
 
   const ButtonField: FC<{
     fresh: boolean;
@@ -97,8 +116,8 @@ export const Room: FC<{
         <button onClick={() => leave()}>退出</button>
         <button onClick={() => setCheckedValues([])}>数字をリセット</button>
         <button
-          onClick={() => (fresh ? reset(roomId, userUid) : add(roomId))}
-          disabled={disabled}
+          onClick={() => (fresh ? reset() : add())}
+          disabled={isDisabled || isLoading}
         >
           送信!
         </button>
@@ -108,7 +127,7 @@ export const Room: FC<{
   return (
     <div className="container">
       <h4>Room: {roomId}</h4>
-      {!player || !opponent ? (
+      {isWaitingForOpponent ? (
         <div>
           <p>対戦相手を探しています...</p>
           <button onClick={() => leave()}>退出</button>
@@ -118,12 +137,22 @@ export const Room: FC<{
           <div className="roomInfo-field">
             <p>対戦相手が見つかったよ!!</p>
             <p>
-              {name} vs {opponent}
+              {name} vs {opponent?.name || '不明'}
             </p>
-            <p>自分の番号: {selectNumber}</p>
+            <p>自分の番号: {currentPlayer?.selected || selectNumber}</p>
           </div>
           <div>
-            {!isGemeSet ? (
+            {error && (
+              <div style={{ color: 'red', marginBottom: '10px' }}>
+                エラー: {error}
+              </div>
+            )}
+            {roomError && (
+              <div style={{ color: 'red', marginBottom: '10px' }}>
+                エラー: {roomError}
+              </div>
+            )}
+            {!isGameSet ? (
               <>
                 <CheckboxField
                   checkedValues={checkedValues}
@@ -132,7 +161,7 @@ export const Room: FC<{
                 <br />
                 <ButtonField fresh={false} />
                 <br />
-                {disabled && <span>相手の入力を待ってます...</span>}
+                {isDisabled && <span>相手の入力を待ってます...</span>}
                 <br />
               </>
             ) : (
@@ -146,14 +175,14 @@ export const Room: FC<{
                   />
                   <ButtonField fresh />
                 </div>
-                {disabled && <p id="text">相手の入力をまってます...</p>}
+                {isDisabled && <p id="text">相手の入力をまってます...</p>}
               </div>
             )}
-            {log.length > 0 && (
+            {gameLog.length > 0 && (
               <LogField
                 player={player}
-                opponentSelectNumber={opponentSelectNumber}
-                log={log}
+                opponentSelectNumber={opponent?.selected || []}
+                log={gameLog}
               />
             )}
           </div>
