@@ -1,5 +1,12 @@
+import {
+  collection,
+  doc,
+  getDoc,
+  runTransaction,
+  serverTimestamp,
+} from 'firebase/firestore';
+
 import { db } from '../firebase';
-import firebase from 'firebase/app';
 import { numberValidate } from './numberValidate';
 
 const check = (numArray: number[], playerNumber: number[]) => {
@@ -26,29 +33,35 @@ export const registerGameData = async (
   if (!numberValidate(numberArray))
     throw new Error(`無効な数字だよ! 数字は3つ選んでね!`);
   setDisabled(true);
-  const docRef = db.collection('rooms').doc(`room: ${id}`);
+  const docRef = doc(collection(db, 'rooms'), `room: ${id}`);
 
   //hit blow をチェックする
   let player1Number: number[] = [];
   let player2Number: number[] = [];
   let turn: number = 0;
-  await docRef.get().then((doc) => {
-    player1Number = doc.data()?.player1Number;
-    player2Number = doc.data()?.player2Number;
-    turn = doc.data()?.turn;
-  });
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    player1Number = data?.player1Number;
+    player2Number = data?.player2Number;
+    turn = data?.turn;
+  }
   const result = check(
     numberArray,
     player === 'player1' ? player2Number : player1Number
   );
 
-  db.runTransaction(async (transaction) => {
+  await runTransaction(db, async (transaction) => {
+    const gameDataRef = doc(
+      collection(docRef, 'gameData'),
+      `turn: ${turn.toString()}`
+    );
     if (player === 'player1') {
       transaction.set(
-        docRef.collection('gameData').doc(`turn: ${turn.toString()}`),
+        gameDataRef,
         {
           player1: result,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdAt: serverTimestamp(),
         },
         { merge: true }
       );
@@ -57,10 +70,10 @@ export const registerGameData = async (
       });
     } else if (player === 'player2') {
       transaction.set(
-        docRef.collection('gameData').doc(`turn: ${turn.toString()}`),
+        gameDataRef,
         {
           player2: result,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdAt: serverTimestamp(),
         },
         { merge: true }
       );

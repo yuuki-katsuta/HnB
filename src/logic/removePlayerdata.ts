@@ -1,14 +1,13 @@
+import { collection, doc, runTransaction } from 'firebase/firestore';
+
 import { db } from '../firebase';
 
 export const removePlayerData = async (id: string, uid: string) => {
-  const docRef = db.collection('rooms').doc(`room: ${id}`);
+  const docRef = doc(collection(db, 'rooms'), `room: ${id}`);
+  const playerRef = doc(collection(docRef, 'player'), uid);
 
-  db.runTransaction(async (transaction) => {
-    return await transaction
-      .get(db.collection('rooms').doc(`room: ${id}`))
-      .then(() => {
-        transaction.delete(docRef.collection('player').doc(uid));
-        transaction.delete(docRef);
-      });
+  await runTransaction(db, async (transaction) => {
+    transaction.delete(playerRef);
+    transaction.delete(docRef);
   });
 };

@@ -1,8 +1,9 @@
-import firebase from 'firebase/app';
+import { DocumentData, QuerySnapshot } from 'firebase/firestore';
+
 import { RoomInfo, RoomPlayerInfo } from '../types';
 
 export const setPlayerData = (
-  Snapshot: firebase.firestore.QuerySnapshot<firebase.firestore.DocumentData>,
+  Snapshot: QuerySnapshot<DocumentData>,
   roomId: string,
   uid: string,
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>

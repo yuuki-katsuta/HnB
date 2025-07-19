@@ -1,5 +1,16 @@
-import { LogData, RoomInfo, RoomPlayerInfo } from '../types';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+  updateDoc,
+} from 'firebase/firestore';
+
 import { db } from '../firebase';
+import { LogData, RoomInfo, RoomPlayerInfo } from '../types';
 
 export const gameDataSubscribe = (
   roomId: string,
@@ -10,56 +21,57 @@ export const gameDataSubscribe = (
   userUid: string,
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>
 ) =>
-  db
-    .collection('rooms')
-    .doc(`room: ${roomId}`)
-    .onSnapshot(async (doc) => {
-      if (doc.data()?.player1Added && doc.data()?.player2Added) {
-        const docRef = db.collection('rooms').doc(`room: ${roomId}`);
+  onSnapshot(
+    doc(collection(db, 'rooms'), `room: ${roomId}`),
+    async (docSnap) => {
+      const data = docSnap.data();
+      if (data?.player1Added && data?.player2Added) {
+        const docRef = doc(collection(db, 'rooms'), `room: ${roomId}`);
 
         isMounted && setDisabled(false);
-        await docRef.update({
-          turn: doc.data()?.turn + 1,
+        await updateDoc(docRef, {
+          turn: data?.turn + 1,
           player1Added: false,
           player2Added: false,
         });
-        await docRef
-          .collection('gameData')
-          .orderBy('createdAt', 'asc')
-          .get()
-          .then((Snapshot) => {
-            let log: LogData = [];
-            let player1HitCount = 0;
-            let player2HitCount = 0;
 
-            Snapshot.forEach((doc) => {
-              log.push({
-                player2: doc.data().player2,
-                player1: doc.data().player1,
-              });
-            });
-            if (log.length > 0) {
-              const lastLogData = log[log.length - 1];
-              player1HitCount = lastLogData.player1.hit;
-              player2HitCount = lastLogData.player2.hit;
-              if (player1HitCount === 3 || player2HitCount === 3) {
-                isMounted && setIsGameSet(true);
-              }
-            }
-            isMounted && setLog(log);
+        const gameDataCollection = collection(docRef, 'gameData');
+        const gameDataQuery = query(
+          gameDataCollection,
+          orderBy('createdAt', 'asc')
+        );
+        const snapshot = await getDocs(gameDataQuery);
+        let log: LogData = [];
+        let player1HitCount = 0;
+        let player2HitCount = 0;
+
+        snapshot.forEach((doc) => {
+          log.push({
+            player2: doc.data().player2,
+            player1: doc.data().player1,
           });
+        });
+        if (log.length > 0) {
+          const lastLogData = log[log.length - 1];
+          player1HitCount = lastLogData.player1.hit;
+          player2HitCount = lastLogData.player2.hit;
+          if (player1HitCount === 3 || player2HitCount === 3) {
+            isMounted && setIsGameSet(true);
+          }
+        }
+        isMounted && setLog(log);
       }
 
-      if (doc.data()?.player1Retry && doc.data()?.player2Retry) {
-        const docRef = db.collection('rooms').doc(`room: ${roomId}`);
-        const snapshot = await docRef.collection('gameData').get();
+      if (data?.player1Retry && data?.player2Retry) {
+        const docRef = doc(collection(db, 'rooms'), `room: ${roomId}`);
+        const gameDataCollection = collection(docRef, 'gameData');
+        const gameDataSnapshot = await getDocs(gameDataCollection);
+
         await Promise.all(
-          snapshot.docs.map(
-            async (doc) =>
-              await docRef.collection('gameData').doc(doc.id).delete()
-          )
+          gameDataSnapshot.docs.map(async (doc) => await deleteDoc(doc.ref))
         ).catch((error) => alert(error.message));
-        await docRef.update({
+
+        await updateDoc(docRef, {
           turn: 1,
           player1Added: false,
           player2Added: false,
@@ -68,23 +80,20 @@ export const gameDataSubscribe = (
         });
 
         const member: RoomPlayerInfo = [];
-        await db
-          .collection('rooms')
-          .doc(`room: ${roomId}`)
-          .collection('player')
-          .get()
-          .then((snapshot) => {
-            snapshot.forEach((doc) => {
-              if (doc.data()) {
-                member.push({
-                  id: doc.data().uid,
-                  name: doc.data().name,
-                  player: doc.data().player,
-                  selected: doc.data().selected,
-                });
-              }
+        const playersCollection = collection(docRef, 'player');
+        const playersSnapshot = await getDocs(playersCollection);
+
+        playersSnapshot.forEach((doc) => {
+          if (doc.data()) {
+            member.push({
+              id: doc.data().uid,
+              name: doc.data().name,
+              player: doc.data().player,
+              selected: doc.data().selected,
             });
-          });
+          }
+        });
+
         if (isMounted) {
           setIsGameSet(false);
           setDisabled(false);
@@ -92,29 +101,27 @@ export const gameDataSubscribe = (
       }
 
       if (
-        doc.data()?.player1Number &&
-        doc.data()?.player2Number &&
-        doc.data()?.player1Retry &&
-        doc.data()?.player2Retry
+        data?.player1Number &&
+        data?.player2Number &&
+        data?.player1Retry &&
+        data?.player2Retry
       ) {
         const member: RoomPlayerInfo = [];
-        await db
-          .collection('rooms')
-          .doc(`room: ${roomId}`)
-          .collection('player')
-          .get()
-          .then((snapshot) => {
-            snapshot.forEach((doc) => {
-              if (doc.data()) {
-                member.push({
-                  id: doc.data().uid,
-                  name: doc.data().name,
-                  player: doc.data().player,
-                  selected: doc.data().selected,
-                });
-              }
+        const docRef = doc(collection(db, 'rooms'), `room: ${roomId}`);
+        const playersCollection = collection(docRef, 'player');
+        const playersSnapshot = await getDocs(playersCollection);
+
+        playersSnapshot.forEach((doc) => {
+          if (doc.data()) {
+            member.push({
+              id: doc.data().uid,
+              name: doc.data().name,
+              player: doc.data().player,
+              selected: doc.data().selected,
             });
-          });
+          }
+        });
+
         const opponentData = member.find((user) => user.id !== userUid);
         const playerData = member.find((user) => user.id === userUid);
         if (playerData && opponentData && isMounted) {
@@ -129,4 +136,5 @@ export const gameDataSubscribe = (
           });
         }
       }
-    });
+    }
+  );

@@ -1,21 +1,21 @@
-import { VFC, useCallback, useEffect, useState } from 'react';
-import { registerGameData } from '../logic/registerGameData';
-import { LogField } from '../components/LogField';
+import { FC, useCallback, useEffect, useState } from 'react';
+
 import { CheckboxField } from '../components/CheckboxField';
-import { resetGame } from '../logic/resetGame';
-import { LogData } from '../types';
-import { RoomInfo } from '../types';
-import { initRoomData } from '../logic/initRoomInfo';
+import { LogField } from '../components/LogField';
 import { gameDataSubscribe } from '../logic/gameDataSubscribe';
+import { initRoomData } from '../logic/initRoomInfo';
 import { playerSubscribe } from '../logic/playerSubscribe';
+import { registerGameData } from '../logic/registerGameData';
 import { removePlayerData } from '../logic/removePlayerdata';
+import { resetGame } from '../logic/resetGame';
+import { LogData, RoomInfo } from '../types';
 
 const onUnload = (e: { preventDefault: () => void; returnValue: string }) => {
   e.preventDefault();
   e.returnValue = '';
 };
 
-export const Room: VFC<{
+export const Room: FC<{
   roomInfo: RoomInfo;
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
 }> = ({
@@ -89,11 +89,11 @@ export const Room: VFC<{
     window.confirm('退出しますか??') && setRoomInfo(initRoomData());
   }, [setRoomInfo, opponent, player, roomId, userUid]);
 
-  const ButtonField: VFC<{
+  const ButtonField: FC<{
     fresh: boolean;
   }> = ({ fresh }): JSX.Element => (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
-      <div className='button-wrapper'>
+      <div className="button-wrapper">
         <button onClick={() => leave()}>退出</button>
         <button onClick={() => setCheckedValues([])}>数字をリセット</button>
         <button
@@ -106,7 +106,7 @@ export const Room: VFC<{
     </div>
   );
   return (
-    <div className='container'>
+    <div className="container">
       <h4>Room: {roomId}</h4>
       {!player || !opponent ? (
         <div>
@@ -115,7 +115,7 @@ export const Room: VFC<{
         </div>
       ) : (
         <div>
-          <div className='roomInfo-field'>
+          <div className="roomInfo-field">
             <p>対戦相手が見つかったよ!!</p>
             <p>
               {name} vs {opponent}
@@ -146,7 +146,7 @@ export const Room: VFC<{
                   />
                   <ButtonField fresh />
                 </div>
-                {disabled && <p id='text'>相手の入力をまってます...</p>}
+                {disabled && <p id="text">相手の入力をまってます...</p>}
               </div>
             )}
             {log.length > 0 && (

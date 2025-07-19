@@ -1,26 +1,26 @@
-import { VFC, useState } from 'react';
+import { User } from 'firebase/auth';
+import { FC, useState } from 'react';
+
 import { CheckboxField } from '../components/CheckboxField';
-import { useRecoilValue } from 'recoil';
-import { currentUserState } from '../store/authState';
-import firebase from 'firebase/app';
-import { enterRoom } from '../logic/enterRoom';
-import { RoomInfo } from '../types';
-import { initRoomData } from '../logic/initRoomInfo';
 import { createRoom } from '../logic/createRoom';
+import { enterRoom } from '../logic/enterRoom';
+import { initRoomData } from '../logic/initRoomInfo';
+import { useAuthStore } from '../store/authState';
+import { RoomInfo } from '../types';
 
 type Props = {
   setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
 };
 
-export const Home: VFC<Props> = ({ setRoomInfo }) => {
-  const currentUser = useRecoilValue(currentUserState) as firebase.User;
+export const Home: FC<Props> = ({ setRoomInfo }) => {
+  const currentUser = useAuthStore((state) => state.currentUser) as User;
   const [name, setName] = useState<string>('');
   const [roomId, setRoomId] = useState<string>('');
   const [checkedValues, setCheckedValues] = useState<number[]>([]);
   const [disabled, setDisabled] = useState(false);
 
   return (
-    <div className='container'>
+    <div className="container">
       <h2>Hit and Blow !!</h2>
       <p>
         0から9の数字で3ケタの数字を作り、正解の数字を予測していくゲームです。
@@ -38,14 +38,14 @@ export const Home: VFC<Props> = ({ setRoomInfo }) => {
       <button onClick={() => setCheckedValues([])}>数字をリセット</button>
       <br />
       <br />
-      <div className='form-wrapper'>
+      <div className="form-wrapper">
         <table style={{ textAlign: 'left' }}>
           <tbody>
             <tr>
               <td>Name</td>
               <td>
                 <input
-                  placeholder='あなたのニックネーム'
+                  placeholder="あなたのニックネーム"
                   maxLength={10}
                   value={name}
                   onChange={(e) => setName(e.target.value)}

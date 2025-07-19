@@ -1,4 +1,5 @@
 import { FC, memo } from 'react';
+
 import { LogData } from '../types';
 
 type Props = {
@@ -38,7 +39,7 @@ export const LogField: FC<Props> = memo(({ player, log }) => {
       {log.map((logData, index: number) => (
         <div key={index}>
           {player === 'player1' ? (
-            <p className='log'>
+            <p className="log">
               あなた: 選んだ数字: {logData.player1.ownSelect}, hit:
               {logData.player1.hit}, blow:{logData.player1.blow}
               <br />
@@ -46,7 +47,7 @@ export const LogField: FC<Props> = memo(({ player, log }) => {
               {logData.player2.hit}, blow:{logData.player2.blow}
             </p>
           ) : (
-            <p className='log'>
+            <p className="log">
               あなた: 選んだ数字: {logData.player2.ownSelect}, hit:
               {logData.player2.hit}, blow:{logData.player2.blow}
               <br />

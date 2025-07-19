@@ -1,8 +1,12 @@
-import { atom } from 'recoil';
-import firebase from 'firebase';
+import { User } from 'firebase/auth';
+import { create } from 'zustand';
 
-export const currentUserState = atom<firebase.User | null>({
-  key: 'auth/currentUser',
-  default: null,
-  dangerouslyAllowMutability: true,
-});
+interface AuthState {
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  currentUser: null,
+  setCurrentUser: (user) => set({ currentUser: user }),
+}));

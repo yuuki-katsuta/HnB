@@ -1,3 +1,5 @@
+import { collection, doc, getDocs, runTransaction } from 'firebase/firestore';
+
 import { db } from '../firebase';
 import { RoomInfo } from '../types';
 import { nameValidate } from './nameValidate';
@@ -11,7 +13,7 @@ export const createRoom = async (
 ) => {
   if (!numberValidate(numberList))
     throw new Error(`無効な数字だよ! 数字は3つ選んでね!`);
-  if (nameValidate(name)) throw new Error(`無効な名前だよ!`);
+  if (!nameValidate(name)) throw new Error(`無効な名前だよ!`);
 
   let roomId: string = '';
 
@@ -22,53 +24,42 @@ export const createRoom = async (
   };
 
   //重複チェック
-  await db
-    .collection('rooms')
-    .get()
-    .then((Snapshot) => {
-      const docList: string[] = [];
-      Snapshot.forEach((doc) =>
-        Snapshot.forEach((doc) => docList.push(doc.id))
-      );
-      roomId = duplicateCheck(docList, String(Math.random()).substring(2, 6));
+  const roomsCollection = collection(db, 'rooms');
+  const snapshot = await getDocs(roomsCollection);
+  const docList: string[] = [];
+  snapshot.forEach((doc) => docList.push(doc.id));
+  roomId = duplicateCheck(docList, String(Math.random()).substring(2, 6));
+
+  const docRef = doc(roomsCollection, `room: ${roomId}`);
+  const docPlayerRef = doc(collection(docRef, 'player'), userUid);
+
+  await runTransaction(db, async (transaction) => {
+    transaction.set(docRef, {
+      turn: 1,
+      player1: name,
+      player2: '',
+      player1Number: numberList,
+      player2Number: null,
+      player1Added: false,
+      player2Added: false,
+      player1Retry: false,
+      player2Retry: false,
     });
+    transaction.set(docPlayerRef, {
+      name: name,
+      uid: userUid,
+      player: 'player1',
+      selected: numberList,
+    });
+  });
 
-  const docRef = db.collection('rooms').doc(`room: ${roomId}`);
-  const docPlayerRef = db
-    .collection('rooms')
-    .doc(`room: ${roomId}`)
-    .collection('player')
-    .doc(userUid);
-
-  return await db
-    .runTransaction(async (transaction) => {
-      transaction.set(docRef, {
-        turn: 1,
-        player1: name,
-        player2: '',
-        player1Number: numberList,
-        player2Number: null,
-        player1Added: false,
-        player2Added: false,
-        player1Retry: false,
-        player2Retry: false,
-      });
-      transaction.set(docPlayerRef, {
-        name: name,
-        uid: userUid,
-        player: 'player1',
-        selected: numberList,
-      });
-    })
-    .then(() =>
-      setRoomInfo({
-        roomId: roomId,
-        userUid: userUid,
-        name: name,
-        selectNumber: numberList,
-        player: '',
-        opponent: '',
-        opponentSelectNumber: [],
-      })
-    );
+  setRoomInfo({
+    roomId: roomId,
+    userUid: userUid,
+    name: name,
+    selectNumber: numberList,
+    player: '',
+    opponent: '',
+    opponentSelectNumber: [],
+  });
 };

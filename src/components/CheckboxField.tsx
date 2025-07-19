@@ -21,12 +21,12 @@ export const CheckboxField: FC<Props> = ({
 
   return (
     <>
-      <div className='select-wrapper'>
+      <div className="select-wrapper">
         {new Array(10).fill(0).map((_, i) => {
           return (
             <span key={i}>
               <input
-                type='checkbox'
+                type="checkbox"
                 value={i}
                 checked={checkedValues.includes(i)}
                 onChange={(e) => checkValues(e)}
@@ -36,7 +36,7 @@ export const CheckboxField: FC<Props> = ({
           );
         })}
       </div>
-      <span className='selected-number'>選んだ数字→{checkedValues}</span>
+      <span className="selected-number">選んだ数字→{checkedValues}</span>
     </>
   );
 };

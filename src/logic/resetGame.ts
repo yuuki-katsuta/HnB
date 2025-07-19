@@ -1,3 +1,5 @@
+import { collection, doc, getDoc, runTransaction } from 'firebase/firestore';
+
 import { db } from '../firebase';
 import { numberValidate } from './numberValidate';
 
@@ -8,16 +10,17 @@ export const resetGame = async (
   setDisabled: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const room = `room: ${id}`;
-  const docRef = db.collection('rooms').doc(room);
-  const playerRef = docRef.collection('player').doc(uid);
-  const player = await playerRef.get().then((doc) => doc.data()?.player);
+  const docRef = doc(collection(db, 'rooms'), room);
+  const playerRef = doc(collection(docRef, 'player'), uid);
+  const playerDoc = await getDoc(playerRef);
+  const player = playerDoc.data()?.player;
 
   if (!numberValidate(numberList)) {
     setDisabled(false);
     throw new Error(`無効な数字だよ! 数字は3つ選んでね!`);
   }
 
-  await db.runTransaction(async (transaction) => {
+  await runTransaction(db, async (transaction) => {
     if (player === 'player1') {
       transaction.update(playerRef, {
         selected: numberList,
